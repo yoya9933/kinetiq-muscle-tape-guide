@@ -263,7 +263,7 @@ export default function Home() {
                 <div className="check-panel">
                   <h2>照片模擬與貼附檢查</h2>
                   <div className="tape-control"><label><span>肌貼長度</span><b>{tapeLength} cm</b></label><input type="range" min="12" max="35" value={tapeLength} onChange={(event) => { setTapeLength(Number(event.target.value)); setVerified(false); }} /></div>
-                  <div className="tape-control"><label><span>貼附角度</span><b>{tapeRotation}°</b></label><input type="range" min="-45" max="45" value={tapeRotation} onChange={(event) => { setTapeRotation(Number(event.target.value)); setVerified(false); }} /></div>
+                  <div className="tape-control"><label><span>貼附角度</span><b>{tapeRotation}°</b></label><input type="range" min="-90" max="90" value={tapeRotation} onChange={(event) => { setTapeRotation(Number(event.target.value)); setVerified(false); }} /></div>
                   <div className="check-row"><span>01</span><p><b>裁剪長度</b><small>{tapeLength} cm，末端修圓角</small></p><i>{simulationPhoto ? "✓" : "—"}</i></div>
                   <div className="check-row"><span>02</span><p><b>{isArm ? "I 型：單條未分叉" : "Y 型：單端縱向分叉"}</b><small>{isArm ? "整條直接沿肌肉路徑貼附，兩端修圓" : "保留 5 cm 共同錨點，其餘沿中線分成兩尾"}</small></p><i>✓</i></div>
                   <div className="check-row"><span>03</span><p><b>貼附方向</b><small>沿{region}周圍肌群向上貼附</small></p><i>{verified ? "✓" : "—"}</i></div>
