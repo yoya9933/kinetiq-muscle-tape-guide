@@ -30,6 +30,7 @@ const answers = {
 };
 
 export default function Home() {
+  const [started, setStarted] = useState(false);
   const [step, setStep] = useState(0);
   const [profile, setProfile] = useState({ gender: "女性", age: "28", height: "165", weight: "60", build: "標準" });
   const [region, setRegion] = useState("左膝");
@@ -57,10 +58,28 @@ export default function Home() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+  if (!started) {
+    return (
+      <main className="landing-page">
+        <img src="/kinetiq-home.png" alt="KinetiQ 個人化智慧肌貼導引：身體模型、症狀分析、姿勢矯正、肌貼方案、模擬預覽與 AR 導引" />
+        <div className="landing-shade" />
+        <div className="landing-top">
+          <span className="landing-logo"><i>K</i>KinetiQ</span>
+          <span>個人化智慧肌貼導引</span>
+        </div>
+        <div className="landing-action">
+          <p>從不適關節與症狀開始，取得個人化肌貼參數與逐步貼附指引。</p>
+          <button onClick={() => setStarted(true)}>開始個人化導引 <span>→</span></button>
+          <small>約 7 分鐘完成 · 本服務為操作輔助，不能取代醫療診斷</small>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main>
       <header className="topbar">
-        <button className="brand" onClick={() => setStep(0)} aria-label="回到開始">
+        <button className="brand" onClick={() => { setStep(0); setStarted(false); }} aria-label="回到首頁">
           <span className="brand-mark">K</span>
           <span>KinetiQ</span>
         </button>
@@ -240,7 +259,7 @@ export default function Home() {
           <footer className="actions">
             <button className="back-button" onClick={back} disabled={step === 0}>← 上一步</button>
             <span>約需 {Math.max(1, 7 - step)} 分鐘完成</span>
-            {step < 6 ? <button className="primary-button" onClick={next} disabled={step === 3 && !poseReady}>繼續 <span>→</span></button> : <button className="primary-button" onClick={() => { setStep(0); setPoseReady(false); setVerified(false); }}>完成並重新開始 <span>↻</span></button>}
+            {step < 6 ? <button className="primary-button" onClick={next} disabled={step === 3 && !poseReady}>繼續 <span>→</span></button> : <button className="primary-button" onClick={() => { setStep(0); setPoseReady(false); setVerified(false); setStarted(false); }}>完成並返回首頁 <span>↻</span></button>}
           </footer>
         </section>
       </div>
