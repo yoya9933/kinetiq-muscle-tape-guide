@@ -38,6 +38,10 @@ export default function Home() {
   const [poseReady, setPoseReady] = useState(false);
   const [verified, setVerified] = useState(false);
   const [simulationPhoto, setSimulationPhoto] = useState("");
+  const [tapeLength, setTapeLength] = useState(22);
+  const [tapeRotation, setTapeRotation] = useState(-6);
+  const [tapePosition, setTapePosition] = useState({ x: 50, y: 50 });
+  const simulationRef = useRef<HTMLDivElement>(null);
 
   const selectedRegion = useMemo(() => joints.find((item) => item.name === region) ?? joints[4], [region]);
   const isArm = ["肩", "肘", "腕"].some((joint) => region.includes(joint));
@@ -57,6 +61,16 @@ export default function Home() {
   function back() {
     setStep((current) => Math.max(current - 1, 0));
     window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function moveSimulatedTape(clientX: number, clientY: number) {
+    const rect = simulationRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    setTapePosition({
+      x: Math.max(10, Math.min(90, ((clientX - rect.left) / rect.width) * 100)),
+      y: Math.max(15, Math.min(85, ((clientY - rect.top) / rect.height) * 100)),
+    });
+    setVerified(false);
   }
 
   if (!started) {
@@ -227,23 +241,33 @@ export default function Home() {
                       <div className="simulation-hint"><b>拍攝{region}貼附位置</b><small>請讓關節與周圍皮膚清楚出現在畫面中央</small></div>
                     </>
                   ) : (
-                    <div className="simulation-result">
+                    <div
+                      ref={simulationRef}
+                      className="simulation-result"
+                      onPointerDown={(event) => { event.currentTarget.setPointerCapture(event.pointerId); moveSimulatedTape(event.clientX, event.clientY); }}
+                      onPointerMove={(event) => { if (event.buttons === 1) moveSimulatedTape(event.clientX, event.clientY); }}
+                    >
                       <img src={simulationPhoto} alt={`${region}肌貼模擬照片`} />
                       <span className="camera-badge">模擬示意圖</span>
-                      <div className={`photo-tape ${isArm ? "i-shape" : "y-shape"}`}><i /><i /></div>
-                      <div className="photo-anchor">① 無拉力錨點</div>
-                      <div className="photo-direction">貼附方向 ↑</div>
+                      <div
+                        className={`photo-tape ${isArm ? "i-shape" : "y-shape"}`}
+                        style={{ left: `${tapePosition.x}%`, top: `${tapePosition.y}%`, transform: `translate(-50%,-50%) rotate(${tapeRotation}deg) scale(${tapeLength / 22})` }}
+                      ><i /><i /><b>{tapeLength} cm</b></div>
+                      <div className="photo-anchor">① 拖曳肌貼調整位置</div>
+                      <div className="photo-direction">角度 {tapeRotation}°</div>
                       <div className="photo-stretch">25% 拉伸</div>
-                      <button className="retake-button" onClick={() => { setSimulationPhoto(""); setVerified(false); }}>↺ 重新拍攝</button>
+                      <button className="retake-button" onPointerDown={(event) => event.stopPropagation()} onClick={() => { setSimulationPhoto(""); setVerified(false); }}>↺ 重新拍攝</button>
                     </div>
                   )}
                 </div>
                 <div className="check-panel">
                   <h2>照片模擬與貼附檢查</h2>
-                  <div className="check-row"><span>01</span><p><b>裁剪長度</b><small>22 cm，末端修圓角</small></p><i>✓</i></div>
+                  <div className="tape-control"><label><span>肌貼長度</span><b>{tapeLength} cm</b></label><input type="range" min="12" max="35" value={tapeLength} onChange={(event) => { setTapeLength(Number(event.target.value)); setVerified(false); }} /></div>
+                  <div className="tape-control"><label><span>貼附角度</span><b>{tapeRotation}°</b></label><input type="range" min="-45" max="45" value={tapeRotation} onChange={(event) => { setTapeRotation(Number(event.target.value)); setVerified(false); }} /></div>
+                  <div className="check-row"><span>01</span><p><b>裁剪長度</b><small>{tapeLength} cm，末端修圓角</small></p><i>{simulationPhoto ? "✓" : "—"}</i></div>
                   <div className="check-row"><span>02</span><p><b>{isArm ? "I 型肌貼" : "Y 型分支"}</b><small>{isArm ? "沿單一肌肉路徑貼附" : "從 5 cm 錨點後開始"}</small></p><i>✓</i></div>
                   <div className="check-row"><span>03</span><p><b>貼附方向</b><small>沿{region}周圍肌群向上貼附</small></p><i>{verified ? "✓" : "—"}</i></div>
-                  <button className="secondary-button" disabled={!simulationPhoto} onClick={() => setVerified(true)}>{verified ? "方案已通過驗證" : simulationPhoto ? "確認模擬貼附位置" : "請先拍攝貼附位置"}</button>
+                  <button className="secondary-button" disabled={!simulationPhoto} onClick={() => setVerified(true)}>{verified ? `已確認 ${tapeLength} cm 與貼附位置` : simulationPhoto ? "確認長度與貼附位置" : "請先拍攝貼附位置"}</button>
                 </div>
               </div>
             )}
