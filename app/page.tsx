@@ -303,10 +303,12 @@ function ModelPanel({ profile, region, highlight = false, onSelect }: { profile:
 function CameraModule({ embedded = false, onCapture }: { embedded?: boolean; onCapture: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
   const [facingMode, setFacingMode] = useState<"user" | "environment">("environment");
   const [status, setStatus] = useState<"idle" | "starting" | "live" | "error">("idle");
   const [error, setError] = useState("");
   const [snapshot, setSnapshot] = useState("");
+  const [isEmbeddedBrowser, setIsEmbeddedBrowser] = useState(false);
 
   function stopCamera() {
     streamRef.current?.getTracks().forEach((track) => track.stop());
@@ -331,9 +333,11 @@ function CameraModule({ embedded = false, onCapture }: { embedded?: boolean; onC
       }
       setStatus("live");
     } catch (cameraError) {
-      const message = cameraError instanceof DOMException && cameraError.name === "NotAllowedError"
-        ? "鏡頭權限未開啟，請在瀏覽器設定中允許使用鏡頭。"
-        : cameraError instanceof Error ? cameraError.message : "無法啟動鏡頭，請稍後再試。";
+      let message = cameraError instanceof Error ? cameraError.message : "無法啟動鏡頭，請稍後再試。";
+      if (cameraError instanceof DOMException && cameraError.name === "NotAllowedError") message = "鏡頭權限被拒絕。請改用 Chrome／Safari 開啟，並允許網站使用相機。";
+      if (cameraError instanceof DOMException && cameraError.name === "NotFoundError") message = "找不到可使用的鏡頭，請確認裝置相機未被其他程式占用。";
+      if (cameraError instanceof DOMException && cameraError.name === "NotReadableError") message = "鏡頭正被其他程式使用，請關閉其他相機程式後重試。";
+      if (cameraError instanceof DOMException && cameraError.name === "SecurityError") message = "目前的內嵌瀏覽器禁止相機，請在 Chrome／Safari 開啟網站。";
       setError(message);
       setStatus("error");
     }
@@ -357,7 +361,22 @@ function CameraModule({ embedded = false, onCapture }: { embedded?: boolean; onC
     onCapture();
   }
 
-  useEffect(() => () => stopCamera(), []);
+  function useNativePhoto(file?: File) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      setSnapshot(String(reader.result));
+      setStatus("idle");
+      stopCamera();
+      onCapture();
+    };
+    reader.readAsDataURL(file);
+  }
+
+  useEffect(() => {
+    setIsEmbeddedBrowser(window.self !== window.top);
+    return () => stopCamera();
+  }, []);
 
   return (
     <div className={`camera-module ${embedded ? "embedded" : ""}`}>
@@ -366,8 +385,13 @@ function CameraModule({ embedded = false, onCapture }: { embedded?: boolean; onC
         <div className="camera-permission">
           <span className="camera-icon">◉</span>
           <b>{status === "starting" ? "正在啟動鏡頭…" : "開啟即時鏡頭"}</b>
-          <small>{error || "首次使用時，瀏覽器會詢問鏡頭權限。"}</small>
+          <small>{error || (isEmbeddedBrowser ? "目前位於內嵌預覽，可能無法取得相機權限。" : "首次使用時，瀏覽器會詢問鏡頭權限。")}</small>
           <button onClick={() => startCamera()} disabled={status === "starting"}>{status === "error" ? "重新嘗試" : "允許並開啟鏡頭"}</button>
+          <div className="camera-fallback">
+            {isEmbeddedBrowser && <a href="https://muscle-tape-ai-guide.bowersbayley13783.chatgpt.site" target="_blank" rel="noreferrer">在瀏覽器開啟 ↗</a>}
+            <button className="native-photo" onClick={() => fileRef.current?.click()}>使用手機相機拍照</button>
+            <input ref={fileRef} type="file" accept="image/*" capture="environment" onChange={(event) => useNativePhoto(event.target.files?.[0])} />
+          </div>
         </div>
       )}
       {status === "live" && (
