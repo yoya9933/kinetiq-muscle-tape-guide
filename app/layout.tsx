@@ -2,37 +2,27 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
+const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Starter Project",
-  description: "A clean starting point for building your site.",
-  icons: {
-    icon: "/favicon.svg",
-    shortcut: "/favicon.svg",
+  metadataBase: new URL("https://muscle-tape-ai-guide.bowersbayley13783.chatgpt.site"),
+  title: "KinetiQ｜個人化智慧肌貼導引",
+  description: "從症狀分析、姿態校正到肌貼參數與 AR 貼附教學，完成個人化肌貼導引。",
+  icons: { icon: "/favicon.svg", shortcut: "/favicon.svg" },
+  openGraph: {
+    title: "KinetiQ｜個人化智慧肌貼導引",
+    description: "建立身體模型、分析症狀、校正姿態，取得個人化肌貼方案與 AR 貼附教學。",
+    images: [{ url: "/og.png", width: 1739, height: 909, alt: "KinetiQ 個人化智慧肌貼導引" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "KinetiQ｜個人化智慧肌貼導引",
+    description: "從症狀分析到 AR 貼附教學的完整個人化流程。",
+    images: ["/og.png"],
   },
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-  return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
-      </body>
-    </html>
-  );
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  return <html lang="zh-Hant"><body className={`${geistSans.variable} ${geistMono.variable}`}>{children}</body></html>;
 }
