@@ -218,9 +218,9 @@ export default function Home() {
               <div className="result-layout">
                 <div className="tape-visual">
                   <span className="result-badge">分析完成</span>
-                  <div className="tape-shape"><i /><i /></div>
-                  <b>{isArm ? "I 型肌貼" : "Y 型肌貼"}</b>
-                  <small>{isArm ? "適合上臂肌群單一路徑" : "適合腿後肌群分支走向"}</small>
+                  <div className={`tape-shape ${isArm ? "i-cut" : "y-cut"}`}><i /><i /></div>
+                  <b>{isArm ? "I 型（單條未分叉）" : "Y 型（單端縱向分叉）"}</b>
+                  <small>{isArm ? "一整條肌貼，兩端修圓" : "保留共同錨點，再沿中線剪出兩條尾端"}</small>
                 </div>
                 <div className="metrics">
                   <div><span>建議長度</span><b>22 <small>cm</small></b><em>肌肉路徑 20 cm + 錨點預留</em></div>
@@ -265,7 +265,7 @@ export default function Home() {
                   <div className="tape-control"><label><span>肌貼長度</span><b>{tapeLength} cm</b></label><input type="range" min="12" max="35" value={tapeLength} onChange={(event) => { setTapeLength(Number(event.target.value)); setVerified(false); }} /></div>
                   <div className="tape-control"><label><span>貼附角度</span><b>{tapeRotation}°</b></label><input type="range" min="-45" max="45" value={tapeRotation} onChange={(event) => { setTapeRotation(Number(event.target.value)); setVerified(false); }} /></div>
                   <div className="check-row"><span>01</span><p><b>裁剪長度</b><small>{tapeLength} cm，末端修圓角</small></p><i>{simulationPhoto ? "✓" : "—"}</i></div>
-                  <div className="check-row"><span>02</span><p><b>{isArm ? "I 型肌貼" : "Y 型分支"}</b><small>{isArm ? "沿單一肌肉路徑貼附" : "從 5 cm 錨點後開始"}</small></p><i>✓</i></div>
+                  <div className="check-row"><span>02</span><p><b>{isArm ? "I 型：單條未分叉" : "Y 型：單端縱向分叉"}</b><small>{isArm ? "整條直接沿肌肉路徑貼附，兩端修圓" : "保留 5 cm 共同錨點，其餘沿中線分成兩尾"}</small></p><i>✓</i></div>
                   <div className="check-row"><span>03</span><p><b>貼附方向</b><small>沿{region}周圍肌群向上貼附</small></p><i>{verified ? "✓" : "—"}</i></div>
                   <button className="secondary-button" disabled={!simulationPhoto} onClick={() => setVerified(true)}>{verified ? `已確認 ${tapeLength} cm 與貼附位置` : simulationPhoto ? "確認長度與貼附位置" : "請先拍攝貼附位置"}</button>
                 </div>
