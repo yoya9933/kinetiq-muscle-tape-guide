@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 const steps = [
   { short: "身體模型", title: "建立個人化人體模型", hint: "建立肌肉節點與身體比例" },
-  { short: "不適區域", title: "選擇不適區域", hint: "定位部位與相關肌群" },
+  { short: "不適關節", title: "選擇不適關節", hint: "點選卡片或直接點人體關節" },
   { short: "症狀分析", title: "描述你的不適", hint: "用簡單問答縮小可能肌群" },
   { short: "姿態校正", title: "準備姿態拍攝", hint: "依輪廓完成指定伸展動作" },
   { short: "肌貼參數", title: "產生個人化肌貼方案", hint: "計算種類、長度、方向與拉伸" },
@@ -12,11 +12,19 @@ const steps = [
   { short: "AR 導引", title: "AR 實際貼附導引", hint: "逐段完成並檢查貼附結果" },
 ];
 
-const regions = [
-  { name: "左手", muscles: "肱二頭肌 · 肱三頭肌", icon: "↙" },
-  { name: "右手", muscles: "肱二頭肌 · 肱三頭肌", icon: "↘" },
-  { name: "左腿", muscles: "股四頭肌 · 腿後肌群 · 小腿肌群", icon: "◐" },
-  { name: "右腿", muscles: "股四頭肌 · 腿後肌群 · 小腿肌群", icon: "◑" },
+const joints = [
+  { name: "左肩", muscles: "三角肌 · 旋轉肌群", icon: "肩", node: "left-shoulder" },
+  { name: "右肩", muscles: "三角肌 · 旋轉肌群", icon: "肩", node: "right-shoulder" },
+  { name: "左肘", muscles: "肱二頭肌 · 肱三頭肌", icon: "肘", node: "left-elbow" },
+  { name: "右肘", muscles: "肱二頭肌 · 肱三頭肌", icon: "肘", node: "right-elbow" },
+  { name: "左腕", muscles: "前臂屈肌群 · 伸肌群", icon: "腕", node: "left-wrist" },
+  { name: "右腕", muscles: "前臂屈肌群 · 伸肌群", icon: "腕", node: "right-wrist" },
+  { name: "左髖", muscles: "臀肌群 · 髖屈肌群", icon: "髖", node: "left-hip" },
+  { name: "右髖", muscles: "臀肌群 · 髖屈肌群", icon: "髖", node: "right-hip" },
+  { name: "左膝", muscles: "股四頭肌 · 腿後肌群", icon: "膝", node: "left-knee" },
+  { name: "右膝", muscles: "股四頭肌 · 腿後肌群", icon: "膝", node: "right-knee" },
+  { name: "左踝", muscles: "腓腸肌 · 脛前肌", icon: "踝", node: "left-ankle" },
+  { name: "右踝", muscles: "腓腸肌 · 脛前肌", icon: "踝", node: "right-ankle" },
 ];
 
 const answers = {
@@ -28,19 +36,19 @@ const answers = {
 export default function Home() {
   const [step, setStep] = useState(0);
   const [profile, setProfile] = useState({ gender: "女性", age: "28", height: "165", build: "標準" });
-  const [region, setRegion] = useState("左腿");
+  const [region, setRegion] = useState("左膝");
   const [symptom, setSymptom] = useState({ direction: "後側", feeling: "緊繃", trigger: "運動後" });
   const [poseReady, setPoseReady] = useState(false);
   const [verified, setVerified] = useState(false);
   const [bodyCameraOpen, setBodyCameraOpen] = useState(false);
 
-  const selectedRegion = useMemo(() => regions.find((item) => item.name === region) ?? regions[1], [region]);
-  const isArm = region.includes("手");
-  const targetMuscle = isArm ? "肱二頭肌與肱三頭肌" : "腿後肌群（Hamstrings）";
-  const poseTitle = isArm ? `伸展${region}` : `將${region}向前伸展`;
+  const selectedRegion = useMemo(() => joints.find((item) => item.name === region) ?? joints[8], [region]);
+  const isArm = ["肩", "肘", "腕"].some((joint) => region.includes(joint));
+  const targetMuscle = selectedRegion.muscles;
+  const poseTitle = isArm ? `伸展${region}周圍肌群` : `伸展${region}周圍肌群`;
   const poseCopy = isArm
-    ? `將${region}自然向外伸直，手掌朝上，直到感覺上臂肌群輕微拉伸。將身體放入透明輪廓內。`
-    : `保持背部自然，伸直${region}，直到感覺腿後肌群輕微拉伸。將身體放入透明輪廓內。`;
+    ? `將${region.slice(0, 1)}手自然向外伸直，緩慢調整手掌方向，直到${region}周圍感到輕微拉伸。將身體放入透明輪廓內。`
+    : `保持背部自然，緩慢伸直${region.slice(0, 1)}腿，直到${region}周圍肌群感到輕微拉伸。將身體放入透明輪廓內。`;
 
   function next() {
     setStep((current) => Math.min(current + 1, steps.length - 1));
@@ -131,15 +139,15 @@ export default function Home() {
               <div className="two-column">
                 <div>
                   <div className="region-grid">
-                    {regions.map((item) => (
+                    {joints.map((item) => (
                       <button key={item.name} className={`region-card ${region === item.name ? "selected" : ""}`} onClick={() => setRegion(item.name)}>
                         <span>{item.icon}</span><div><b>{item.name}</b><small>{item.muscles}</small></div><i>✓</i>
                       </button>
                     ))}
                   </div>
-                  <div className="info-strip">選擇後，系統會載入該部位的肌肉資料、常見不適原因與適用肌貼類型。</div>
+                  <div className="info-strip">可點選左側關節卡片，或直接點擊人體模型上的亮點。兩者會同步選取。</div>
                 </div>
-                <ModelPanel profile={profile} region={region} highlight />
+                <ModelPanel profile={profile} region={region} highlight onSelect={setRegion} />
               </div>
             )}
 
@@ -255,8 +263,45 @@ function ChoiceQuestion({ number, title, choices, value, onChange }: { number: s
   return <fieldset><legend><span>{number}</span>{title}</legend><div className="choice-row">{choices.map((choice) => <button type="button" key={choice} className={value === choice ? "selected" : ""} onClick={() => onChange(choice)}>{choice}<i>✓</i></button>)}</div></fieldset>;
 }
 
-function ModelPanel({ profile, region, highlight = false }: { profile: { gender: string; age: string; height: string; build: string }; region: string; highlight?: boolean }) {
-  return <div className="model-panel"><div className="model-top"><span>3D BODY MAP</span><span className="live-chip">● 模型預覽</span></div><div className="body-model"><div className="human"><i className="h-head" /><i className="h-neck" /><i className="h-body" /><i className="h-arm left" /><i className="h-arm right" /><i className="h-leg left" /><i className="h-leg right" />{[0,1,2,3,4,5,6,7].map((n) => <b key={n} className={`node n${n} ${highlight ? "visible" : ""}`} />)}{highlight && <em className={`muscle-highlight ${region}`} />}</div><div className="orbit o1" /><div className="orbit o2" /></div><div className="model-stats"><span><b>{profile.height}</b> cm<small>身高</small></span><span><b>{profile.build}</b><small>體型</small></span><span><b>24</b> points<small>肌肉節點</small></span></div></div>;
+function ModelPanel({ profile, region, highlight = false, onSelect }: { profile: { gender: string; age: string; height: string; build: string }; region: string; highlight?: boolean; onSelect?: (joint: string) => void }) {
+  return (
+    <div className={`model-panel ${onSelect ? "interactive" : ""}`}>
+      <div className="model-top">
+        <span>3D JOINT MAP</span>
+        <span className="live-chip">● {onSelect ? "點擊關節進行選擇" : "模型預覽"}</span>
+      </div>
+      <div className="body-model">
+        <div className="human">
+          <i className="h-head" /><i className="h-neck" /><i className="h-body" />
+          <i className="h-arm left" /><i className="h-arm right" />
+          <i className="h-leg left" /><i className="h-leg right" />
+          {joints.map((joint) => (
+            <button
+              type="button"
+              key={joint.name}
+              aria-label={`選擇${joint.name}`}
+              title={joint.name}
+              disabled={!onSelect}
+              onClick={() => onSelect?.(joint.name)}
+              className={`node ${joint.node} ${highlight ? "visible" : ""} ${region === joint.name ? "active" : ""}`}
+            >
+              <span>{joint.name}</span>
+            </button>
+          ))}
+        </div>
+        <div className="orbit o1" /><div className="orbit o2" />
+      </div>
+      <div className="selected-joint">
+        <span>目前選擇</span><b>{region}</b>
+        <small>{joints.find((joint) => joint.name === region)?.muscles}</small>
+      </div>
+      <div className="model-stats">
+        <span><b>{profile.height}</b> cm<small>身高</small></span>
+        <span><b>{profile.build}</b><small>體型</small></span>
+        <span><b>12</b> joints<small>可選關節</small></span>
+      </div>
+    </div>
+  );
 }
 
 function CameraModule({ embedded = false, onCapture }: { embedded?: boolean; onCapture: () => void }) {
