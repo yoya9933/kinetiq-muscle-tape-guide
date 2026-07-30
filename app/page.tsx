@@ -39,6 +39,7 @@ export default function Home() {
   const [verified, setVerified] = useState(false);
   const [simulationPhoto, setSimulationPhoto] = useState("");
   const [arCaptured, setArCaptured] = useState(false);
+  const [arGuideStep, setArGuideStep] = useState(0);
   const [tapeLength, setTapeLength] = useState(22);
   const [tapeRotation, setTapeRotation] = useState(-6);
   const [tapePosition, setTapePosition] = useState({ x: 50, y: 50 });
@@ -278,29 +279,7 @@ export default function Home() {
             )}
 
             {step === 6 && (
-              <div className="ar-layout">
-                <div className="ar-live-stage">
-                  <CameraModule embedded onCapture={() => setArCaptured(true)} />
-                  <div className="ar-tape-layer">
-                    <span className="ar-live-badge">{arCaptured ? "AR CAPTURED" : "AR OVERLAY"}</span>
-                    <div
-                      className={`photo-tape ${tapePhotoClass}`}
-                      style={{ left: `${tapePosition.x}%`, top: `${tapePosition.y}%`, transform: `translate(-50%,-50%) rotate(${tapeRotation}deg) scale(${tapeLength / 22})` }}
-                    ><i /><i /><b>{tapeLength} cm</b></div>
-                    <div className="anchor-label">① {isKnee ? "交叉點對準髕骨下方" : "對準共同錨點"}</div>
-                    <div className="stretch-label">保持 25% 拉伸</div>
-                    <div className="ar-guide-line">沿虛擬肌貼方向逐段貼附</div>
-                  </div>
-                </div>
-                <div className="ar-guide">
-                  <span className="result-badge">{arCaptured ? "AR 結果已拍攝" : "AR 功能已掛載"}</span>
-                  <h2>跟著畫面逐段貼附</h2>
-                  <p>開啟鏡頭後，第六步確認的肌貼類型、長度、位置與角度會即時疊加在真人影像上。</p>
-                  <ol><li className="current"><span>1</span><div><b>固定無拉力錨點</b><small>{region}附近約 3–5 cm</small></div></li><li className={arCaptured ? "current" : ""}><span>2</span><div><b>沿虛擬肌貼方向貼附</b><small>維持約 25% 拉伸</small></div></li><li className={arCaptured ? "current" : ""}><span>3</span><div><b>拍攝並確認結果</b><small>末端不施加拉力</small></div></li></ol>
-                  <button className="secondary-button" disabled={!arCaptured}>{arCaptured ? "AR 貼附結果已確認" : "請開啟鏡頭並拍攝結果"}</button>
-                  <div className="medical-note"><b>注意</b> 若出現明顯紅腫、劇烈疼痛或麻木，請停止使用並諮詢醫療專業人員。</div>
-                </div>
-              </div>
+              <ARGuide region={region} tapePhotoClass={tapePhotoClass} tapeLength={tapeLength} tapeRotation={tapeRotation} guideStep={arGuideStep} setGuideStep={setArGuideStep} captured={arCaptured} setCaptured={setArCaptured} />
             )}
           </div>
 
@@ -317,6 +296,139 @@ export default function Home() {
 
 function ChoiceQuestion({ number, title, choices, value, onChange }: { number: string; title: string; choices: string[]; value: string; onChange: (value: string) => void }) {
   return <fieldset><legend><span>{number}</span>{title}</legend><div className="choice-row">{choices.map((choice) => <button type="button" key={choice} className={value === choice ? "selected" : ""} onClick={() => onChange(choice)}>{choice}<i>✓</i></button>)}</div></fieldset>;
+}
+
+type ARGuideProps = {
+  region: string;
+  tapePhotoClass: string;
+  tapeLength: number;
+  tapeRotation: number;
+  guideStep: number;
+  setGuideStep: (step: number) => void;
+  captured: boolean;
+  setCaptured: (captured: boolean) => void;
+};
+
+function ARGuide({ region, tapePhotoClass, tapeLength, tapeRotation, guideStep, setGuideStep, captured, setCaptured }: ARGuideProps) {
+  const [video, setVideo] = useState<HTMLVideoElement | null>(null);
+  const [tracking, setTracking] = useState<"waiting" | "loading" | "tracking" | "manual">("waiting");
+  const [target, setTarget] = useState({ x: 50, y: 53, scale: 1 });
+  const [confidence, setConfidence] = useState(0);
+  const detectorRef = useRef<{ detectForVideo: (video: HTMLVideoElement, time: number) => { landmarks?: Array<Array<{ x: number; y: number; visibility?: number }>> }; close?: () => void } | null>(null);
+
+  const jointIndex = region.includes("膝") ? (region.startsWith("左") ? 25 : 26)
+    : region.includes("踝") ? (region.startsWith("左") ? 27 : 28)
+    : region.includes("肘") ? (region.startsWith("左") ? 13 : 14)
+    : region.includes("腕") ? (region.startsWith("左") ? 15 : 16)
+    : region.startsWith("左") ? 11 : 12;
+  const referenceIndex = region.includes("膝") ? (region.startsWith("左") ? 23 : 24)
+    : region.includes("踝") ? (region.startsWith("左") ? 25 : 26)
+    : region.includes("肘") ? (region.startsWith("左") ? 11 : 12)
+    : region.includes("腕") ? (region.startsWith("左") ? 13 : 14)
+    : region.startsWith("左") ? 23 : 24;
+
+  useEffect(() => {
+    if (!video) {
+      setTracking("waiting");
+      return;
+    }
+    let cancelled = false;
+    let frame = 0;
+    let lastVideoTime = -1;
+    setTracking("loading");
+
+    async function loadDetector() {
+      try {
+        const dynamicImport = new Function("url", "return import(url)") as (url: string) => Promise<Record<string, unknown>>;
+        const vision = await dynamicImport("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/+esm");
+        const FilesetResolver = vision.FilesetResolver as { forVisionTasks: (path: string) => Promise<unknown> };
+        const PoseLandmarker = vision.PoseLandmarker as { createFromOptions: (files: unknown, options: unknown) => Promise<typeof detectorRef.current> };
+        const files = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm");
+        detectorRef.current = await PoseLandmarker.createFromOptions(files, {
+          baseOptions: { modelAssetPath: "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task", delegate: "GPU" },
+          runningMode: "VIDEO",
+          numPoses: 1,
+          minPoseDetectionConfidence: 0.45,
+          minTrackingConfidence: 0.45,
+        });
+        if (cancelled) return;
+
+        const detect = () => {
+          if (cancelled || !video || !detectorRef.current) return;
+          if (video.readyState >= 2 && video.currentTime !== lastVideoTime) {
+            lastVideoTime = video.currentTime;
+            const result = detectorRef.current.detectForVideo(video, performance.now());
+            const points = result.landmarks?.[0];
+            const joint = points?.[jointIndex];
+            const reference = points?.[referenceIndex];
+            if (joint && reference && (joint.visibility ?? 1) > 0.45) {
+              const limbDistance = Math.hypot(joint.x - reference.x, joint.y - reference.y);
+              setTarget({ x: joint.x * 100, y: joint.y * 100, scale: Math.max(0.68, Math.min(1.45, limbDistance / 0.16)) });
+              setConfidence(Math.round((joint.visibility ?? 0.8) * 100));
+              setTracking("tracking");
+            }
+          }
+          frame = requestAnimationFrame(detect);
+        };
+        detect();
+      } catch {
+        if (!cancelled) setTracking("manual");
+      }
+    }
+    loadDetector();
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(frame);
+      detectorRef.current?.close?.();
+      detectorRef.current = null;
+    };
+  }, [video, jointIndex, referenceIndex]);
+
+  function calibrate(event: React.PointerEvent<HTMLDivElement>) {
+    const rect = event.currentTarget.getBoundingClientRect();
+    setTarget({ ...target, x: ((event.clientX - rect.left) / rect.width) * 100, y: ((event.clientY - rect.top) / rect.height) * 100 });
+    setTracking("manual");
+    setConfidence(100);
+  }
+
+  const statusText = tracking === "tracking" ? `${region}已鎖定 · ${confidence}%`
+    : tracking === "loading" ? "AI 關節模型載入中"
+    : tracking === "manual" ? `已手動校準${region}`
+    : "等待開啟相機";
+
+  return (
+    <div className="ar-layout">
+      <div className="ar-live-stage" onPointerDown={calibrate}>
+        <CameraModule embedded onVideoReady={setVideo} onCapture={() => { setCaptured(true); setGuideStep(2); }} />
+        <div className="ar-tape-layer">
+          <span className={`ar-live-badge ${tracking}`}>{statusText}</span>
+          {(tracking === "tracking" || tracking === "manual") && (
+            <>
+              <span className="joint-lock" style={{ left: `${target.x}%`, top: `${target.y}%` }}><i />{region}</span>
+              <div className={`photo-tape ${tapePhotoClass} guide-segment-${guideStep}`} style={{ left: `${target.x}%`, top: `${target.y}%`, transform: `translate(-50%,-50%) rotate(${tapeRotation}deg) scale(${target.scale * tapeLength / 22})` }}><i /><i /><b>{tapeLength} cm</b></div>
+              <div className="body-scale-readout">身體比例 {target.scale.toFixed(2)}×</div>
+              <div className="anchor-label">① 對準{region}定位點</div>
+              <div className="stretch-label">{guideStep === 0 ? "錨點 0% 拉伸" : guideStep === 1 ? "中段保持 25%" : "末端 0% 拉伸"}</div>
+            </>
+          )}
+          <div className="ar-guide-line">{tracking === "waiting" ? "先開啟手機相機" : tracking === "loading" ? "請讓目標關節完整入鏡" : "AI 未鎖定時，可直接點擊畫面校準關節"}</div>
+        </div>
+      </div>
+      <div className="ar-guide">
+        <span className="result-badge">{captured ? "結果已拍攝" : tracking === "tracking" ? "即時追蹤中" : "AR 校準模式"}</span>
+        <h2>跟著畫面逐條貼附</h2>
+        <p>系統辨識人體節點並鎖定{region}，再依肢段比例調整第六步確認的肌貼路徑。半透明肌貼會跟隨關節位置移動。</p>
+        <div className="ar-pipeline"><span>相機</span><i>→</i><span>關節</span><i>→</i><span>比例</span><i>→</i><span>肌貼</span></div>
+        <ol>
+          <li className={guideStep === 0 ? "current" : guideStep > 0 ? "done" : ""} onClick={() => setGuideStep(0)}><span>{guideStep > 0 ? "✓" : "1"}</span><div><b>固定第一條錨點</b><small>{region}附近 3–5 cm，不施加拉力</small></div></li>
+          <li className={guideStep === 1 ? "current" : guideStep > 1 ? "done" : ""} onClick={() => setGuideStep(1)}><span>{guideStep > 1 ? "✓" : "2"}</span><div><b>{region.includes("膝") ? "沿髕骨外側貼第一條 I 型" : "沿虛擬路徑貼附"}</b><small>依半透明路徑維持約 25% 拉伸</small></div></li>
+          <li className={guideStep === 2 ? "current" : ""} onClick={() => setGuideStep(2)}><span>3</span><div><b>{region.includes("膝") ? "交叉貼第二條 I 型並驗證" : "末端放鬆並拍攝驗證"}</b><small>末端不拉伸，完成後按鏡頭快門</small></div></li>
+        </ol>
+        <button className="secondary-button" onClick={() => setGuideStep(Math.min(2, guideStep + 1))}>{guideStep < 2 ? "完成這一段，繼續下一步" : captured ? "AR 貼附結果已確認" : "請使用鏡頭拍攝完成結果"}</button>
+        <div className="medical-note"><b>原型提醒</b> 關節辨識與疊圖僅提供操作定位，不是傷勢診斷。若出現明顯紅腫、劇烈疼痛或麻木，請停止使用並諮詢醫療專業人員。</div>
+      </div>
+    </div>
+  );
 }
 
 function ModelPanel({ profile, region, highlight = false, onSelect }: { profile: { gender: string; age: string; height: string; build: string }; region: string; highlight?: boolean; onSelect?: (joint: string) => void }) {
@@ -360,7 +472,7 @@ function ModelPanel({ profile, region, highlight = false, onSelect }: { profile:
   );
 }
 
-function CameraModule({ embedded = false, onCapture }: { embedded?: boolean; onCapture: (image: string) => void }) {
+function CameraModule({ embedded = false, onCapture, onVideoReady }: { embedded?: boolean; onCapture: (image: string) => void; onVideoReady?: (video: HTMLVideoElement | null) => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -392,6 +504,7 @@ function CameraModule({ embedded = false, onCapture }: { embedded?: boolean; onC
         await videoRef.current.play();
       }
       setStatus("live");
+      onVideoReady?.(videoRef.current);
     } catch (cameraError) {
       let message = cameraError instanceof Error ? cameraError.message : "無法啟動鏡頭，請稍後再試。";
       if (cameraError instanceof DOMException && cameraError.name === "NotAllowedError") message = "鏡頭權限被拒絕。請改用 Chrome／Safari 開啟，並允許網站使用相機。";
@@ -437,7 +550,7 @@ function CameraModule({ embedded = false, onCapture }: { embedded?: boolean; onC
 
   useEffect(() => {
     setIsEmbeddedBrowser(window.self !== window.top);
-    return () => stopCamera();
+    return () => { onVideoReady?.(null); stopCamera(); };
   }, []);
 
   return (
