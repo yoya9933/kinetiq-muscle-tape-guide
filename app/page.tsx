@@ -31,12 +31,11 @@ const answers = {
 
 export default function Home() {
   const [step, setStep] = useState(0);
-  const [profile, setProfile] = useState({ gender: "女性", age: "28", height: "165", build: "標準" });
+  const [profile, setProfile] = useState({ gender: "女性", age: "28", height: "165", weight: "60", build: "標準" });
   const [region, setRegion] = useState("左膝");
   const [symptom, setSymptom] = useState({ direction: "後側", feeling: "緊繃", trigger: "扭傷" });
   const [poseReady, setPoseReady] = useState(false);
   const [verified, setVerified] = useState(false);
-  const [bodyCameraOpen, setBodyCameraOpen] = useState(false);
 
   const selectedRegion = useMemo(() => joints.find((item) => item.name === region) ?? joints[4], [region]);
   const isArm = ["肩", "肘", "腕"].some((joint) => region.includes(joint));
@@ -45,6 +44,8 @@ export default function Home() {
   const poseCopy = isArm
     ? `將${region.slice(0, 1)}手自然向外伸直，緩慢調整手掌方向，直到${region}周圍感到輕微拉伸。將身體放入透明輪廓內。`
     : `保持背部自然，緩慢伸直${region.slice(0, 1)}腿，直到${region}周圍肌群感到輕微拉伸。將身體放入透明輪廓內。`;
+  const bmi = Number(profile.height) > 0 ? Number(profile.weight) / ((Number(profile.height) / 100) ** 2) : 0;
+  const bmiLabel = bmi < 18.5 ? "體重過輕" : bmi < 24 ? "健康範圍" : bmi < 27 ? "體重偏高" : "肥胖範圍";
 
   function next() {
     setStep((current) => Math.min(current + 1, steps.length - 1));
@@ -116,16 +117,17 @@ export default function Home() {
                       {["女性", "男性"].map((value) => <button key={value} className={profile.gender === value ? "selected" : ""} onClick={() => setProfile({ ...profile, gender: value })}>{value}</button>)}
                     </div>
                   </label>
-                  <div className="field-row">
+                  <div className="field-row profile-fields">
                     <label>年齡<input value={profile.age} inputMode="numeric" onChange={(e) => setProfile({ ...profile, age: e.target.value })} /><span>歲</span></label>
                     <label>身高<input value={profile.height} inputMode="numeric" onChange={(e) => setProfile({ ...profile, height: e.target.value })} /><span>cm</span></label>
+                    <label>體重<input value={profile.weight} inputMode="decimal" onChange={(e) => setProfile({ ...profile, weight: e.target.value })} /><span>kg</span></label>
                   </div>
+                  <div className="bmi-card"><div><span>你的 BMI</span><b>{Number.isFinite(bmi) ? bmi.toFixed(1) : "—"}</b></div><div><strong>{bmiLabel}</strong><small>BMI 僅作為身體比例估算參考</small></div></div>
                   <label>體型
                     <div className="build-options">
                       {["纖細", "標準", "健壯"].map((value) => <button key={value} className={profile.build === value ? "selected" : ""} onClick={() => setProfile({ ...profile, build: value })}><i className={`body-shape ${value}`} />{value}</button>)}
                     </div>
                   </label>
-                  <button className="camera-option" onClick={() => setBodyCameraOpen(true)}><span>＋</span><div><b>使用手機鏡頭估測體型</b><small>更精準建立你的身體比例（選填）</small></div><em>開始掃描 →</em></button>
                 </div>
                 <ModelPanel profile={profile} region={region} />
               </div>
@@ -242,15 +244,6 @@ export default function Home() {
           </footer>
         </section>
       </div>
-      {bodyCameraOpen && (
-        <div className="camera-modal" role="dialog" aria-modal="true" aria-label="體型掃描鏡頭">
-          <div className="camera-modal-card">
-            <div className="camera-modal-head"><div><p className="eyebrow">BODY SCAN</p><h2>體型掃描</h2></div><button onClick={() => setBodyCameraOpen(false)} aria-label="關閉鏡頭">×</button></div>
-            <p className="camera-intro">請將全身置於畫面中，保持自然站姿。影像僅在你的裝置上使用，不會上傳。</p>
-            <CameraModule onCapture={() => setBodyCameraOpen(false)} />
-          </div>
-        </div>
-      )}
     </main>
   );
 }
@@ -379,7 +372,7 @@ function CameraModule({ embedded = false, onCapture }: { embedded?: boolean; onC
   }, []);
 
   return (
-    <div className={`camera-module ${embedded ? "embedded" : ""}`}>
+    <div className={`camera-module ${embedded ? "embedded" : ""} ${status !== "live" && !snapshot ? "awaiting" : ""}`}>
       {snapshot ? <img className="camera-preview" src={snapshot} alt="剛拍攝的畫面" /> : <video ref={videoRef} className="camera-video" playsInline muted />}
       {status !== "live" && !snapshot && (
         <div className="camera-permission">
