@@ -38,6 +38,7 @@ export default function Home() {
   const [poseReady, setPoseReady] = useState(false);
   const [verified, setVerified] = useState(false);
   const [simulationPhoto, setSimulationPhoto] = useState("");
+  const [arCaptured, setArCaptured] = useState(false);
   const [tapeLength, setTapeLength] = useState(22);
   const [tapeRotation, setTapeRotation] = useState(-6);
   const [tapePosition, setTapePosition] = useState({ x: 50, y: 50 });
@@ -274,19 +275,25 @@ export default function Home() {
 
             {step === 6 && (
               <div className="ar-layout">
-                <div className="phone-frame">
-                  <div className="phone-camera">
-                    <span>AR LIVE</span>
-                    <div className="ar-leg"><i /><b className="virtual-tape t1" /><b className="virtual-tape t2" /></div>
-                    <div className="anchor-label">① 對準起點</div>
+                <div className="ar-live-stage">
+                  <CameraModule embedded onCapture={() => setArCaptured(true)} />
+                  <div className="ar-tape-layer">
+                    <span className="ar-live-badge">{arCaptured ? "AR CAPTURED" : "AR OVERLAY"}</span>
+                    <div
+                      className={`photo-tape ${isArm ? "i-shape" : "y-shape"}`}
+                      style={{ left: `${tapePosition.x}%`, top: `${tapePosition.y}%`, transform: `translate(-50%,-50%) rotate(${tapeRotation}deg) scale(${tapeLength / 22})` }}
+                    ><i /><i /><b>{tapeLength} cm</b></div>
+                    <div className="anchor-label">① 對準共同錨點</div>
                     <div className="stretch-label">保持 25% 拉伸</div>
+                    <div className="ar-guide-line">沿虛擬肌貼方向逐段貼附</div>
                   </div>
                 </div>
                 <div className="ar-guide">
-                  <span className="result-badge">準備完成</span>
+                  <span className="result-badge">{arCaptured ? "AR 結果已拍攝" : "AR 功能已掛載"}</span>
                   <h2>跟著畫面逐段貼附</h2>
-                  <p>真人影像會與虛擬肌貼疊加顯示。依照起點、方向與拉伸提示完成貼附。</p>
-                  <ol><li className="current"><span>1</span><div><b>固定無拉力錨點</b><small>膝窩上方約 3 cm</small></div></li><li><span>2</span><div><b>沿肌肉方向貼附</b><small>維持約 25% 拉伸</small></div></li><li><span>3</span><div><b>完成末端固定</b><small>末端 3 cm 不施加拉力</small></div></li></ol>
+                  <p>開啟鏡頭後，第六步確認的肌貼類型、長度、位置與角度會即時疊加在真人影像上。</p>
+                  <ol><li className="current"><span>1</span><div><b>固定無拉力錨點</b><small>{region}附近約 3–5 cm</small></div></li><li className={arCaptured ? "current" : ""}><span>2</span><div><b>沿虛擬肌貼方向貼附</b><small>維持約 25% 拉伸</small></div></li><li className={arCaptured ? "current" : ""}><span>3</span><div><b>拍攝並確認結果</b><small>末端不施加拉力</small></div></li></ol>
+                  <button className="secondary-button" disabled={!arCaptured}>{arCaptured ? "AR 貼附結果已確認" : "請開啟鏡頭並拍攝結果"}</button>
                   <div className="medical-note"><b>注意</b> 若出現明顯紅腫、劇烈疼痛或麻木，請停止使用並諮詢醫療專業人員。</div>
                 </div>
               </div>
