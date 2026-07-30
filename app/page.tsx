@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 const steps = [
   { short: "身體模型", title: "建立個人化人體模型", hint: "建立肌肉節點與身體比例" },
@@ -32,6 +32,7 @@ export default function Home() {
   const [symptom, setSymptom] = useState({ direction: "後側", feeling: "緊繃", trigger: "運動後" });
   const [poseReady, setPoseReady] = useState(false);
   const [verified, setVerified] = useState(false);
+  const [bodyCameraOpen, setBodyCameraOpen] = useState(false);
 
   const selectedRegion = useMemo(() => regions.find((item) => item.name === region) ?? regions[1], [region]);
   const isArm = region.includes("手");
@@ -120,7 +121,7 @@ export default function Home() {
                       {["纖細", "標準", "健壯"].map((value) => <button key={value} className={profile.build === value ? "selected" : ""} onClick={() => setProfile({ ...profile, build: value })}><i className={`body-shape ${value}`} />{value}</button>)}
                     </div>
                   </label>
-                  <button className="camera-option"><span>＋</span><div><b>使用手機鏡頭估測體型</b><small>更精準建立你的身體比例（選填）</small></div><em>開始掃描 →</em></button>
+                  <button className="camera-option" onClick={() => setBodyCameraOpen(true)}><span>＋</span><div><b>使用手機鏡頭估測體型</b><small>更精準建立你的身體比例（選填）</small></div><em>開始掃描 →</em></button>
                 </div>
                 <ModelPanel profile={profile} region={region} />
               </div>
@@ -154,6 +155,7 @@ export default function Home() {
             {step === 3 && (
               <div className="camera-stage">
                 <div className="camera-view">
+                  <CameraModule embedded onCapture={() => setPoseReady(true)} />
                   <div className="scan-line" />
                   <div className="pose-figure">
                     <i className="head" /><i className="torso" /><i className="arm left" /><i className="arm right" /><i className="leg left" /><i className="leg right" />
@@ -167,7 +169,7 @@ export default function Home() {
                   <h2>{poseTitle}</h2>
                   <p>{poseCopy}</p>
                   <ul>{isArm ? <><li className="ok">肩膀維持自然</li><li className={poseReady ? "ok" : ""}>手肘完全伸直</li><li className={poseReady ? "ok" : ""}>手腕保持自然</li></> : <><li className="ok">髖部維持正面</li><li className={poseReady ? "ok" : ""}>膝蓋完全伸直</li><li className={poseReady ? "ok" : ""}>腳踝保持自然</li></>}</ul>
-                  <button className="secondary-button" onClick={() => setPoseReady(!poseReady)}>{poseReady ? "重新校正" : "模擬啟用鏡頭"}</button>
+                  <button className="secondary-button" onClick={() => setPoseReady(!poseReady)}>{poseReady ? "重新校正" : "我已完成指定姿勢"}</button>
                 </div>
               </div>
             )}
@@ -236,6 +238,15 @@ export default function Home() {
           </footer>
         </section>
       </div>
+      {bodyCameraOpen && (
+        <div className="camera-modal" role="dialog" aria-modal="true" aria-label="體型掃描鏡頭">
+          <div className="camera-modal-card">
+            <div className="camera-modal-head"><div><p className="eyebrow">BODY SCAN</p><h2>體型掃描</h2></div><button onClick={() => setBodyCameraOpen(false)} aria-label="關閉鏡頭">×</button></div>
+            <p className="camera-intro">請將全身置於畫面中，保持自然站姿。影像僅在你的裝置上使用，不會上傳。</p>
+            <CameraModule onCapture={() => setBodyCameraOpen(false)} />
+          </div>
+        </div>
+      )}
     </main>
   );
 }
@@ -246,4 +257,86 @@ function ChoiceQuestion({ number, title, choices, value, onChange }: { number: s
 
 function ModelPanel({ profile, region, highlight = false }: { profile: { gender: string; age: string; height: string; build: string }; region: string; highlight?: boolean }) {
   return <div className="model-panel"><div className="model-top"><span>3D BODY MAP</span><span className="live-chip">● 模型預覽</span></div><div className="body-model"><div className="human"><i className="h-head" /><i className="h-neck" /><i className="h-body" /><i className="h-arm left" /><i className="h-arm right" /><i className="h-leg left" /><i className="h-leg right" />{[0,1,2,3,4,5,6,7].map((n) => <b key={n} className={`node n${n} ${highlight ? "visible" : ""}`} />)}{highlight && <em className={`muscle-highlight ${region}`} />}</div><div className="orbit o1" /><div className="orbit o2" /></div><div className="model-stats"><span><b>{profile.height}</b> cm<small>身高</small></span><span><b>{profile.build}</b><small>體型</small></span><span><b>24</b> points<small>肌肉節點</small></span></div></div>;
+}
+
+function CameraModule({ embedded = false, onCapture }: { embedded?: boolean; onCapture: () => void }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const [facingMode, setFacingMode] = useState<"user" | "environment">("environment");
+  const [status, setStatus] = useState<"idle" | "starting" | "live" | "error">("idle");
+  const [error, setError] = useState("");
+  const [snapshot, setSnapshot] = useState("");
+
+  function stopCamera() {
+    streamRef.current?.getTracks().forEach((track) => track.stop());
+    streamRef.current = null;
+  }
+
+  async function startCamera(mode = facingMode) {
+    stopCamera();
+    setStatus("starting");
+    setError("");
+    setSnapshot("");
+    try {
+      if (!navigator.mediaDevices?.getUserMedia) throw new Error("此瀏覽器不支援鏡頭功能");
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: mode }, width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: false,
+      });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+      }
+      setStatus("live");
+    } catch (cameraError) {
+      const message = cameraError instanceof DOMException && cameraError.name === "NotAllowedError"
+        ? "鏡頭權限未開啟，請在瀏覽器設定中允許使用鏡頭。"
+        : cameraError instanceof Error ? cameraError.message : "無法啟動鏡頭，請稍後再試。";
+      setError(message);
+      setStatus("error");
+    }
+  }
+
+  async function switchCamera() {
+    const nextMode = facingMode === "environment" ? "user" : "environment";
+    setFacingMode(nextMode);
+    await startCamera(nextMode);
+  }
+
+  function capture() {
+    const video = videoRef.current;
+    if (!video || video.videoWidth === 0) return;
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext("2d")?.drawImage(video, 0, 0);
+    setSnapshot(canvas.toDataURL("image/jpeg", 0.86));
+    stopCamera();
+    onCapture();
+  }
+
+  useEffect(() => () => stopCamera(), []);
+
+  return (
+    <div className={`camera-module ${embedded ? "embedded" : ""}`}>
+      {snapshot ? <img className="camera-preview" src={snapshot} alt="剛拍攝的畫面" /> : <video ref={videoRef} className="camera-video" playsInline muted />}
+      {status !== "live" && !snapshot && (
+        <div className="camera-permission">
+          <span className="camera-icon">◉</span>
+          <b>{status === "starting" ? "正在啟動鏡頭…" : "開啟即時鏡頭"}</b>
+          <small>{error || "首次使用時，瀏覽器會詢問鏡頭權限。"}</small>
+          <button onClick={() => startCamera()} disabled={status === "starting"}>{status === "error" ? "重新嘗試" : "允許並開啟鏡頭"}</button>
+        </div>
+      )}
+      {status === "live" && (
+        <div className="camera-controls">
+          <button onClick={switchCamera} aria-label="切換前後鏡頭">↺</button>
+          <button className="shutter" onClick={capture} aria-label="拍攝"><i /></button>
+          <button onClick={() => { stopCamera(); setStatus("idle"); }} aria-label="關閉即時鏡頭">×</button>
+        </div>
+      )}
+      {status === "live" && <span className="camera-live">● LIVE</span>}
+    </div>
+  );
 }
