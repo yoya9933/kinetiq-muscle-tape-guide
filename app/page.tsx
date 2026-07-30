@@ -13,14 +13,10 @@ const steps = [
 ];
 
 const joints = [
-  { name: "左肩", muscles: "三角肌 · 旋轉肌群", icon: "肩", node: "left-shoulder" },
-  { name: "右肩", muscles: "三角肌 · 旋轉肌群", icon: "肩", node: "right-shoulder" },
   { name: "左肘", muscles: "肱二頭肌 · 肱三頭肌", icon: "肘", node: "left-elbow" },
   { name: "右肘", muscles: "肱二頭肌 · 肱三頭肌", icon: "肘", node: "right-elbow" },
   { name: "左腕", muscles: "前臂屈肌群 · 伸肌群", icon: "腕", node: "left-wrist" },
   { name: "右腕", muscles: "前臂屈肌群 · 伸肌群", icon: "腕", node: "right-wrist" },
-  { name: "左髖", muscles: "臀肌群 · 髖屈肌群", icon: "髖", node: "left-hip" },
-  { name: "右髖", muscles: "臀肌群 · 髖屈肌群", icon: "髖", node: "right-hip" },
   { name: "左膝", muscles: "股四頭肌 · 腿後肌群", icon: "膝", node: "left-knee" },
   { name: "右膝", muscles: "股四頭肌 · 腿後肌群", icon: "膝", node: "right-knee" },
   { name: "左踝", muscles: "腓腸肌 · 脛前肌", icon: "踝", node: "left-ankle" },
@@ -42,7 +38,7 @@ export default function Home() {
   const [verified, setVerified] = useState(false);
   const [bodyCameraOpen, setBodyCameraOpen] = useState(false);
 
-  const selectedRegion = useMemo(() => joints.find((item) => item.name === region) ?? joints[8], [region]);
+  const selectedRegion = useMemo(() => joints.find((item) => item.name === region) ?? joints[4], [region]);
   const isArm = ["肩", "肘", "腕"].some((joint) => region.includes(joint));
   const targetMuscle = selectedRegion.muscles;
   const poseTitle = isArm ? `伸展${region}周圍肌群` : `伸展${region}周圍肌群`;
@@ -298,7 +294,7 @@ function ModelPanel({ profile, region, highlight = false, onSelect }: { profile:
       <div className="model-stats">
         <span><b>{profile.height}</b> cm<small>身高</small></span>
         <span><b>{profile.build}</b><small>體型</small></span>
-        <span><b>12</b> joints<small>可選關節</small></span>
+        <span><b>8</b> joints<small>可選關節</small></span>
       </div>
     </div>
   );
