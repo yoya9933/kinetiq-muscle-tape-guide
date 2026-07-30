@@ -30,14 +30,14 @@ const joints = [
 const answers = {
   direction: ["前側", "後側", "內側", "外側"],
   feeling: ["痠痛", "緊繃", "紅腫"],
-  trigger: ["運動後", "長時間使用", "重複性動作", "不確定"],
+  trigger: ["扭傷", "拉傷", "撞擊", "過度使用"],
 };
 
 export default function Home() {
   const [step, setStep] = useState(0);
   const [profile, setProfile] = useState({ gender: "女性", age: "28", height: "165", build: "標準" });
   const [region, setRegion] = useState("左膝");
-  const [symptom, setSymptom] = useState({ direction: "後側", feeling: "緊繃", trigger: "運動後" });
+  const [symptom, setSymptom] = useState({ direction: "後側", feeling: "緊繃", trigger: "扭傷" });
   const [poseReady, setPoseReady] = useState(false);
   const [verified, setVerified] = useState(false);
   const [bodyCameraOpen, setBodyCameraOpen] = useState(false);
@@ -156,7 +156,7 @@ export default function Home() {
                 <div className="summary-chip"><span>目前選擇</span><b>{region}</b><small>{selectedRegion.muscles}</small></div>
                 <ChoiceQuestion number="01" title="不適主要在哪個方向？" choices={answers.direction} value={symptom.direction} onChange={(value) => setSymptom({ ...symptom, direction: value })} />
                 <ChoiceQuestion number="02" title="你感受到哪種不適？" choices={answers.feeling} value={symptom.feeling} onChange={(value) => setSymptom({ ...symptom, feeling: value })} />
-                <ChoiceQuestion number="03" title="不適通常在什麼情況發生？" choices={answers.trigger} value={symptom.trigger} onChange={(value) => setSymptom({ ...symptom, trigger: value })} />
+                <ChoiceQuestion number="03" title={`${region}因為什麼原因而不適？`} choices={answers.trigger} value={symptom.trigger} onChange={(value) => setSymptom({ ...symptom, trigger: value })} />
               </div>
             )}
 
