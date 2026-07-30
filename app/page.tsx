@@ -13,10 +13,10 @@ const steps = [
 ];
 
 const regions = [
-  { name: "手臂", muscles: "肱二頭肌 · 肱三頭肌", icon: "⌁" },
-  { name: "大腿", muscles: "股四頭肌 · 腿後肌群", icon: "◒" },
-  { name: "小腿", muscles: "腓腸肌 · 脛前肌", icon: "◐" },
-  { name: "背部", muscles: "斜方肌 · 豎脊肌", icon: "◇" },
+  { name: "左手", muscles: "肱二頭肌 · 肱三頭肌", icon: "↙" },
+  { name: "右手", muscles: "肱二頭肌 · 肱三頭肌", icon: "↘" },
+  { name: "左腿", muscles: "股四頭肌 · 腿後肌群 · 小腿肌群", icon: "◐" },
+  { name: "右腿", muscles: "股四頭肌 · 腿後肌群 · 小腿肌群", icon: "◑" },
 ];
 
 const answers = {
@@ -28,12 +28,18 @@ const answers = {
 export default function Home() {
   const [step, setStep] = useState(0);
   const [profile, setProfile] = useState({ gender: "女性", age: "28", height: "165", build: "標準" });
-  const [region, setRegion] = useState("大腿");
+  const [region, setRegion] = useState("左腿");
   const [symptom, setSymptom] = useState({ direction: "後側", feeling: "緊繃", trigger: "運動後" });
   const [poseReady, setPoseReady] = useState(false);
   const [verified, setVerified] = useState(false);
 
   const selectedRegion = useMemo(() => regions.find((item) => item.name === region) ?? regions[1], [region]);
+  const isArm = region.includes("手");
+  const targetMuscle = isArm ? "肱二頭肌與肱三頭肌" : "腿後肌群（Hamstrings）";
+  const poseTitle = isArm ? `伸展${region}` : `將${region}向前伸展`;
+  const poseCopy = isArm
+    ? `將${region}自然向外伸直，手掌朝上，直到感覺上臂肌群輕微拉伸。將身體放入透明輪廓內。`
+    : `保持背部自然，伸直${region}，直到感覺腿後肌群輕微拉伸。將身體放入透明輪廓內。`;
 
   function next() {
     setStep((current) => Math.min(current + 1, steps.length - 1));
@@ -158,9 +164,9 @@ export default function Home() {
                 </div>
                 <div className="instruction-panel">
                   <p className="eyebrow">指定動作</p>
-                  <h2>將腿向前伸展</h2>
-                  <p>保持背部自然，伸直目標腿，直到感覺腿後肌群輕微拉伸。將身體放入透明輪廓內。</p>
-                  <ul><li className="ok">髖部維持正面</li><li className={poseReady ? "ok" : ""}>膝蓋完全伸直</li><li className={poseReady ? "ok" : ""}>腳踝保持自然</li></ul>
+                  <h2>{poseTitle}</h2>
+                  <p>{poseCopy}</p>
+                  <ul>{isArm ? <><li className="ok">肩膀維持自然</li><li className={poseReady ? "ok" : ""}>手肘完全伸直</li><li className={poseReady ? "ok" : ""}>手腕保持自然</li></> : <><li className="ok">髖部維持正面</li><li className={poseReady ? "ok" : ""}>膝蓋完全伸直</li><li className={poseReady ? "ok" : ""}>腳踝保持自然</li></>}</ul>
                   <button className="secondary-button" onClick={() => setPoseReady(!poseReady)}>{poseReady ? "重新校正" : "模擬啟用鏡頭"}</button>
                 </div>
               </div>
@@ -171,16 +177,16 @@ export default function Home() {
                 <div className="tape-visual">
                   <span className="result-badge">分析完成</span>
                   <div className="tape-shape"><i /><i /></div>
-                  <b>Y 型肌貼</b>
-                  <small>適合腿後肌群分支走向</small>
+                  <b>{isArm ? "I 型肌貼" : "Y 型肌貼"}</b>
+                  <small>{isArm ? "適合上臂肌群單一路徑" : "適合腿後肌群分支走向"}</small>
                 </div>
                 <div className="metrics">
                   <div><span>建議長度</span><b>22 <small>cm</small></b><em>肌肉路徑 20 cm + 錨點預留</em></div>
                   <div><span>拉伸比例</span><b>25<small>%</small></b><em>中度支撐，不影響活動</em></div>
-                  <div><span>貼附方向</span><b>由下往上</b><em>沿腿後肌群排列方向</em></div>
-                  <div><span>起始位置</span><b>膝窩上方</b><em>保留 3 cm 無拉力錨點</em></div>
+                  <div><span>貼附方向</span><b>由下往上</b><em>沿{isArm ? "上臂" : "腿後"}肌群排列方向</em></div>
+                  <div><span>起始位置</span><b>{isArm ? "手肘上方" : "膝窩上方"}</b><em>保留 3 cm 無拉力錨點</em></div>
                 </div>
-                <div className="reason-card"><b>方案依據</b><p>{profile.height} cm · {profile.build}體型 · {region}{symptom.direction} · {symptom.feeling} · {symptom.trigger}</p><p>可能相關肌群：<strong>腿後肌群（Hamstrings）</strong></p></div>
+                <div className="reason-card"><b>方案依據</b><p>{profile.height} cm · {profile.build}體型 · {region}{symptom.direction} · {symptom.feeling} · {symptom.trigger}</p><p>可能相關肌群：<strong>{targetMuscle}</strong></p></div>
               </div>
             )}
 
