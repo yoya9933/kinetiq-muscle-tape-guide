@@ -46,6 +46,10 @@ export default function Home() {
 
   const selectedRegion = useMemo(() => joints.find((item) => item.name === region) ?? joints[4], [region]);
   const isArm = ["肩", "肘", "腕"].some((joint) => region.includes(joint));
+  const isKnee = region.includes("膝");
+  const tapeCutClass = isKnee ? "double-i-cut" : isArm ? "i-cut" : "y-cut";
+  const tapePhotoClass = isKnee ? "double-i-shape" : isArm ? "i-shape" : "y-shape";
+  const tapeTypeTitle = isKnee ? "雙 I 型交叉包覆" : isArm ? "I 型（單條未分叉）" : "Y 型（單端縱向分叉）";
   const targetMuscle = selectedRegion.muscles;
   const poseTitle = isArm ? `伸展${region}周圍肌群` : `伸展${region}周圍肌群`;
   const poseCopy = isArm
@@ -219,15 +223,15 @@ export default function Home() {
               <div className="result-layout">
                 <div className="tape-visual">
                   <span className="result-badge">分析完成</span>
-                  <div className={`tape-shape ${isArm ? "i-cut" : "y-cut"}`}><i /><i /></div>
-                  <b>{isArm ? "I 型（單條未分叉）" : "Y 型（單端縱向分叉）"}</b>
-                  <small>{isArm ? "一整條肌貼，兩端修圓" : "保留共同錨點，再沿中線剪出兩條尾端"}</small>
+                  <div className={`tape-shape ${tapeCutClass}`}><i /><i /></div>
+                  <b>{tapeTypeTitle}</b>
+                  <small>{isKnee ? "兩條獨立 I 型肌貼交叉包覆髕骨" : isArm ? "一整條肌貼，兩端修圓" : "保留共同錨點，再沿中線剪出兩條尾端"}</small>
                 </div>
                 <div className="metrics">
                   <div><span>建議長度</span><b>22 <small>cm</small></b><em>肌肉路徑 20 cm + 錨點預留</em></div>
                   <div><span>拉伸比例</span><b>25<small>%</small></b><em>中度支撐，不影響活動</em></div>
-                  <div><span>貼附方向</span><b>由下往上</b><em>沿{isArm ? "上臂" : "腿後"}肌群排列方向</em></div>
-                  <div><span>起始位置</span><b>{isArm ? "手肘上方" : "膝窩上方"}</b><em>保留 3 cm 無拉力錨點</em></div>
+                  <div><span>貼附方向</span><b>{isKnee ? "交叉包覆" : "由下往上"}</b><em>{isKnee ? "兩條 I 型分別沿髕骨兩側貼附" : `沿${isArm ? "上臂" : "腿後"}肌群排列方向`}</em></div>
+                  <div><span>起始位置</span><b>{isKnee ? "髕骨下方" : isArm ? "手肘上方" : "膝窩上方"}</b><em>保留 3 cm 無拉力錨點</em></div>
                 </div>
                 <div className="reason-card"><b>方案依據</b><p>{profile.height} cm · {profile.build}體型 · {region}{symptom.direction} · {symptom.feeling} · {symptom.trigger}</p><p>可能相關肌群：<strong>{targetMuscle}</strong></p></div>
               </div>
@@ -251,10 +255,10 @@ export default function Home() {
                       <img src={simulationPhoto} alt={`${region}肌貼模擬照片`} />
                       <span className="camera-badge">模擬示意圖</span>
                       <div
-                        className={`photo-tape ${isArm ? "i-shape" : "y-shape"}`}
+                        className={`photo-tape ${tapePhotoClass}`}
                         style={{ left: `${tapePosition.x}%`, top: `${tapePosition.y}%`, transform: `translate(-50%,-50%) rotate(${tapeRotation}deg) scale(${tapeLength / 22})` }}
                       ><i /><i /><b>{tapeLength} cm</b></div>
-                      <div className="photo-anchor">① 拖曳肌貼調整位置</div>
+                      <div className="photo-anchor">① {isKnee ? "拖曳交叉點對準髕骨下方" : "拖曳肌貼調整位置"}</div>
                       <div className="photo-direction">角度 {tapeRotation}°</div>
                       <div className="photo-stretch">25% 拉伸</div>
                       <button className="retake-button" onPointerDown={(event) => event.stopPropagation()} onClick={() => { setSimulationPhoto(""); setVerified(false); }}>↺ 重新拍攝</button>
@@ -266,7 +270,7 @@ export default function Home() {
                   <div className="tape-control"><label><span>肌貼長度</span><b>{tapeLength} cm</b></label><input type="range" min="12" max="35" value={tapeLength} onChange={(event) => { setTapeLength(Number(event.target.value)); setVerified(false); }} /></div>
                   <div className="tape-control"><label><span>貼附角度</span><b>{tapeRotation}°</b></label><input type="range" min="-90" max="90" value={tapeRotation} onChange={(event) => { setTapeRotation(Number(event.target.value)); setVerified(false); }} /></div>
                   <div className="check-row"><span>01</span><p><b>裁剪長度</b><small>{tapeLength} cm，末端修圓角</small></p><i>{simulationPhoto ? "✓" : "—"}</i></div>
-                  <div className="check-row"><span>02</span><p><b>{isArm ? "I 型：單條未分叉" : "Y 型：單端縱向分叉"}</b><small>{isArm ? "整條直接沿肌肉路徑貼附，兩端修圓" : "保留 5 cm 共同錨點，其餘沿中線分成兩尾"}</small></p><i>✓</i></div>
+                  <div className="check-row"><span>02</span><p><b>{tapeTypeTitle}</b><small>{isKnee ? "使用兩條獨立 I 型肌貼交叉包覆，不是單條 Y 型" : isArm ? "整條直接沿肌肉路徑貼附，兩端修圓" : "保留 5 cm 共同錨點，其餘沿中線分成兩尾"}</small></p><i>✓</i></div>
                   <div className="check-row"><span>03</span><p><b>貼附方向</b><small>沿{region}周圍肌群向上貼附</small></p><i>{verified ? "✓" : "—"}</i></div>
                   <button className="secondary-button" disabled={!simulationPhoto} onClick={() => setVerified(true)}>{verified ? `已確認 ${tapeLength} cm 與貼附位置` : simulationPhoto ? "確認長度與貼附位置" : "請先拍攝貼附位置"}</button>
                 </div>
@@ -280,10 +284,10 @@ export default function Home() {
                   <div className="ar-tape-layer">
                     <span className="ar-live-badge">{arCaptured ? "AR CAPTURED" : "AR OVERLAY"}</span>
                     <div
-                      className={`photo-tape ${isArm ? "i-shape" : "y-shape"}`}
+                      className={`photo-tape ${tapePhotoClass}`}
                       style={{ left: `${tapePosition.x}%`, top: `${tapePosition.y}%`, transform: `translate(-50%,-50%) rotate(${tapeRotation}deg) scale(${tapeLength / 22})` }}
                     ><i /><i /><b>{tapeLength} cm</b></div>
-                    <div className="anchor-label">① 對準共同錨點</div>
+                    <div className="anchor-label">① {isKnee ? "交叉點對準髕骨下方" : "對準共同錨點"}</div>
                     <div className="stretch-label">保持 25% 拉伸</div>
                     <div className="ar-guide-line">沿虛擬肌貼方向逐段貼附</div>
                   </div>
