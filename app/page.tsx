@@ -37,6 +37,7 @@ export default function Home() {
   const [symptom, setSymptom] = useState({ direction: "後側", feeling: "緊繃", trigger: "扭傷" });
   const [poseReady, setPoseReady] = useState(false);
   const [verified, setVerified] = useState(false);
+  const [simulationPhoto, setSimulationPhoto] = useState("");
 
   const selectedRegion = useMemo(() => joints.find((item) => item.name === region) ?? joints[4], [region]);
   const isArm = ["肩", "肘", "腕"].some((joint) => region.includes(joint));
@@ -219,18 +220,30 @@ export default function Home() {
 
             {step === 5 && (
               <div className="simulation-layout">
-                <div className="cutting-board">
-                  <span className="camera-badge">AR 裁剪預覽</span>
-                  <div className="ruler">{[0,5,10,15,20].map((n) => <span key={n}>{n}</span>)}</div>
-                  <div className="tape-strip"><i className="cut-line" /><b>從此處分叉</b><em>保留 5 cm 錨點</em></div>
-                  <p>將未裁剪的肌貼平放於畫面範圍內</p>
+                <div className="simulation-camera">
+                  {!simulationPhoto ? (
+                    <>
+                      <CameraModule onCapture={(image) => { setSimulationPhoto(image); setVerified(false); }} />
+                      <div className="simulation-hint"><b>拍攝{region}貼附位置</b><small>請讓關節與周圍皮膚清楚出現在畫面中央</small></div>
+                    </>
+                  ) : (
+                    <div className="simulation-result">
+                      <img src={simulationPhoto} alt={`${region}肌貼模擬照片`} />
+                      <span className="camera-badge">模擬示意圖</span>
+                      <div className={`photo-tape ${isArm ? "i-shape" : "y-shape"}`}><i /><i /></div>
+                      <div className="photo-anchor">① 無拉力錨點</div>
+                      <div className="photo-direction">貼附方向 ↑</div>
+                      <div className="photo-stretch">25% 拉伸</div>
+                      <button className="retake-button" onClick={() => { setSimulationPhoto(""); setVerified(false); }}>↺ 重新拍攝</button>
+                    </div>
+                  )}
                 </div>
                 <div className="check-panel">
-                  <h2>裁剪與貼附檢查</h2>
+                  <h2>照片模擬與貼附檢查</h2>
                   <div className="check-row"><span>01</span><p><b>裁剪長度</b><small>22 cm，末端修圓角</small></p><i>✓</i></div>
-                  <div className="check-row"><span>02</span><p><b>Y 型分支</b><small>從 5 cm 錨點後開始</small></p><i>✓</i></div>
-                  <div className="check-row"><span>03</span><p><b>貼附方向</b><small>膝窩上方至坐骨方向</small></p><i>{verified ? "✓" : "—"}</i></div>
-                  <button className="secondary-button" onClick={() => setVerified(true)}>{verified ? "方案已通過驗證" : "模擬驗證方案"}</button>
+                  <div className="check-row"><span>02</span><p><b>{isArm ? "I 型肌貼" : "Y 型分支"}</b><small>{isArm ? "沿單一肌肉路徑貼附" : "從 5 cm 錨點後開始"}</small></p><i>✓</i></div>
+                  <div className="check-row"><span>03</span><p><b>貼附方向</b><small>沿{region}周圍肌群向上貼附</small></p><i>{verified ? "✓" : "—"}</i></div>
+                  <button className="secondary-button" disabled={!simulationPhoto} onClick={() => setVerified(true)}>{verified ? "方案已通過驗證" : simulationPhoto ? "確認模擬貼附位置" : "請先拍攝貼附位置"}</button>
                 </div>
               </div>
             )}
@@ -312,7 +325,7 @@ function ModelPanel({ profile, region, highlight = false, onSelect }: { profile:
   );
 }
 
-function CameraModule({ embedded = false, onCapture }: { embedded?: boolean; onCapture: () => void }) {
+function CameraModule({ embedded = false, onCapture }: { embedded?: boolean; onCapture: (image: string) => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -368,19 +381,21 @@ function CameraModule({ embedded = false, onCapture }: { embedded?: boolean; onC
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     canvas.getContext("2d")?.drawImage(video, 0, 0);
-    setSnapshot(canvas.toDataURL("image/jpeg", 0.86));
+    const capturedImage = canvas.toDataURL("image/jpeg", 0.86);
+    setSnapshot(capturedImage);
     stopCamera();
-    onCapture();
+    onCapture(capturedImage);
   }
 
   function useNativePhoto(file?: File) {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => {
-      setSnapshot(String(reader.result));
+      const capturedImage = String(reader.result);
+      setSnapshot(capturedImage);
       setStatus("idle");
       stopCamera();
-      onCapture();
+      onCapture(capturedImage);
     };
     reader.readAsDataURL(file);
   }
