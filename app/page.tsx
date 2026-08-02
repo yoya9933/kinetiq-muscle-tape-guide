@@ -36,6 +36,7 @@ export default function Home() {
   const [appEntering, setAppEntering] = useState(false);
   const [showExperienceForm, setShowExperienceForm] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
   const [experienceProfile, setExperienceProfile] = useState({ name: "", email: "" });
   const [demoUser, setDemoUser] = useState<{ name: string; id: string } | null>(null);
   const [step, setStep] = useState(0);
@@ -209,7 +210,7 @@ export default function Home() {
   }
 
   return (
-    <main className={appEntering ? "app-entering" : ""}>
+    <main className={`${appEntering ? "app-entering" : ""} ${darkMode ? "dark-mode" : ""}`}>
       <div className="app-entry-curtain" aria-hidden="true"><span>K</span><i /></div>
       <header className="topbar">
         <button className="brand" onClick={() => { setStep(0); setStarted(false); }} aria-label="回到首頁">
@@ -219,6 +220,7 @@ export default function Home() {
         <div className="header-meta">
           <span className="status-dot" />
           <span>{demoUser ? `${demoUser.name} · ${demoUser.id}` : "個人化肌貼導引"}</span>
+          <button className="theme-button" aria-label={darkMode ? "切換亮色模式" : "切換暗黑模式"} title={darkMode ? "亮色模式" : "暗黑模式"} onClick={() => setDarkMode((value) => !value)}>{darkMode ? "☀" : "◐"}</button>
           <button className="help-button" aria-label="使用說明" onClick={() => setShowHelp(true)}>?</button>
         </div>
       </header>
