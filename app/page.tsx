@@ -54,6 +54,8 @@ export default function Home() {
   const [applicationMode, setApplicationMode] = useState<"" | "self" | "machine">("");
   const [machineFileNo, setMachineFileNo] = useState("");
   const simulationRef = useRef<HTMLDivElement>(null);
+  const isGuest = demoUser?.id === "GUEST";
+  const availableSteps = isGuest ? steps.slice(0, 7) : steps;
 
   const selectedRegion = useMemo(() => joints.find((item) => item.name === region), [region]);
   const isArm = ["肩", "肘", "腕"].some((joint) => region.includes(joint));
@@ -90,7 +92,7 @@ export default function Home() {
   const bmiLabel = bmi < 18.5 ? "體重過輕" : bmi < 24 ? "健康範圍" : bmi < 27 ? "體重偏高" : "肥胖範圍";
 
   function next() {
-    setStep((current) => Math.min(current + 1, steps.length - 1));
+    setStep((current) => Math.min(current + 1, availableSteps.length - 1));
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -197,12 +199,12 @@ export default function Home() {
         <div className="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title">
           <div className="help-card">
             <div className="help-head">
-              <div><span>QUICK GUIDE</span><h2 id="help-title">8 個步驟的操作方式</h2></div>
+              <div><span>QUICK GUIDE</span><h2 id="help-title">{availableSteps.length} 個步驟的操作方式</h2></div>
               <button aria-label="關閉使用說明" onClick={() => setShowHelp(false)}>×</button>
             </div>
             <p className="help-intro">依序完成資料、症狀與關節選擇，系統會產生個人化肌貼方案。</p>
             <ol className="help-steps">
-              {steps.map((item, index) => (
+              {availableSteps.map((item, index) => (
                 <li key={item.short} className={step === index ? "current" : ""}>
                   <span>{index + 1}</span>
                   <div><b>{item.short}</b><small>{item.hint}</small></div>
@@ -219,7 +221,7 @@ export default function Home() {
         <aside className="sidebar" aria-label="操作進度">
           <p className="eyebrow">你的導引流程</p>
           <div className="progress-list">
-            {steps.map((item, index) => (
+            {availableSteps.map((item, index) => (
               <button
                 key={item.short}
                 className={`progress-item ${index === step ? "active" : ""} ${index < step ? "done" : ""}`}
@@ -242,14 +244,14 @@ export default function Home() {
 
         <section className="workspace">
           <div className="mobile-progress">
-            <span>步驟 {step + 1} / {steps.length}</span>
-            <div><i style={{ width: `${((step + 1) / steps.length) * 100}%` }} /></div>
+            <span>步驟 {step + 1} / {availableSteps.length}</span>
+            <div><i style={{ width: `${((step + 1) / availableSteps.length) * 100}%` }} /></div>
           </div>
 
           <div className="content-head">
             <p className="eyebrow">STEP {String(step + 1).padStart(2, "0")}</p>
-            <h1>{steps[step].title}</h1>
-            <p>{steps[step].hint}</p>
+            <h1>{availableSteps[step].title}</h1>
+            <p>{availableSteps[step].hint}</p>
           </div>
 
           <div className="stage">
@@ -416,7 +418,7 @@ export default function Home() {
               <ARGuide region={region} tapePhotoClass={tapePhotoClass} tapeLength={tapeLength} tapeRotation={tapeRotation} branchAngle={branchAngle} guideStep={arGuideStep} setGuideStep={setArGuideStep} captured={arCaptured} setCaptured={setArCaptured} />
             )}
 
-            {step === 7 && (
+            {!isGuest && step === 7 && (
               <FollowUpAnalysis region={region} tapeType={tapeTypeTitle} followUp={followUp} setFollowUp={(value) => { setFollowUp(value); setRecordSaved(false); }} saved={recordSaved} />
             )}
           </div>
@@ -424,7 +426,7 @@ export default function Home() {
           <footer className="actions">
             <button className="back-button" onClick={back} disabled={step === 0}>← 上一步</button>
             <span>{step === 7 ? "完成後將保存於此裝置" : `約需 ${Math.max(1, 8 - step)} 分鐘完成`}</span>
-            {step === 4 ? <span aria-hidden="true" /> : step < 7 ? <button className="primary-button" onClick={next} disabled={(step === 1 && !region) || (step === 3 && !poseReady)}>繼續 <span>→</span></button> : !recordSaved ? <button className="primary-button" onClick={saveFollowUp}>儲存追蹤紀錄 <span>✓</span></button> : <button className="primary-button" onClick={() => { setStep(0); setPoseReady(false); setVerified(false); setRecordSaved(false); setStarted(false); }}>完成並返回首頁 <span>↻</span></button>}
+            {step === 4 ? <span aria-hidden="true" /> : isGuest && step === 6 ? <button className="primary-button" onClick={() => { setStep(0); setPoseReady(false); setVerified(false); setStarted(false); }}>完成並返回首頁 <span>↻</span></button> : step < 7 ? <button className="primary-button" onClick={next} disabled={(step === 1 && !region) || (step === 3 && !poseReady)}>繼續 <span>→</span></button> : !recordSaved ? <button className="primary-button" onClick={saveFollowUp}>儲存追蹤紀錄 <span>✓</span></button> : <button className="primary-button" onClick={() => { setStep(0); setPoseReady(false); setVerified(false); setRecordSaved(false); setStarted(false); }}>完成並返回首頁 <span>↻</span></button>}
           </footer>
         </section>
       </div>
