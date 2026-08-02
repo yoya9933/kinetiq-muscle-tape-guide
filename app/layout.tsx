@@ -4,9 +4,13 @@ import "./globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
+const deploymentHost =
+  process.env.VERCEL_PROJECT_PRODUCTION_URL ?? process.env.VERCEL_URL;
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ??
+  (deploymentHost ? `https://${deploymentHost}` : "http://localhost:3000");
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://muscle-tape-ai-guide.bowersbayley13783.chatgpt.site"),
+  metadataBase: new URL(siteUrl),
   title: "KinetiQ｜個人化智慧肌貼導引",
   description: "從症狀分析、姿態校正到肌貼參數與 AR 貼附教學，完成個人化肌貼導引。",
   icons: { icon: "/favicon.svg", shortcut: "/favicon.svg" },

@@ -3,13 +3,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 const steps = [
-  { short: "身體模型", title: "建立個人化人體模型", hint: "建立肌肉節點與身體比例" },
-  { short: "不適關節", title: "選擇不適關節", hint: "點選卡片或直接點人體關節" },
-  { short: "症狀分析", title: "描述你的不適", hint: "用簡單問答縮小可能肌群" },
+  { short: "身體模型", title: "建立個人化人體模型", hint: "建立身體比例並記錄不適原因" },
+  { short: "不適關節", title: "選擇不適關節與感受", hint: "選擇關節並描述目前的不適" },
+  { short: "不適位置", title: "確認不適位置", hint: "選擇關節的前、後、內或外側" },
   { short: "姿態校正", title: "準備姿態拍攝", hint: "依輪廓完成指定伸展動作" },
   { short: "肌貼參數", title: "產生個人化肌貼方案", hint: "計算種類、長度、方向與拉伸" },
   { short: "虛擬驗證", title: "模擬裁剪與貼附", hint: "在實際操作前先確認方案" },
   { short: "AR 導引", title: "AR 實際貼附導引", hint: "逐段完成並檢查貼附結果" },
+  { short: "貼後追蹤", title: "貼後追蹤與個人化分析", hint: "記錄效果並優化下次建議" },
 ];
 
 const joints = [
@@ -25,7 +26,7 @@ const joints = [
 
 const answers = {
   direction: ["前側", "後側", "內側", "外側"],
-  feeling: ["痠痛", "緊繃", "紅腫"],
+  feeling: ["痠痛", "緊繃", "紅腫", "瘀青", "發熱", "無力"],
   trigger: ["扭傷", "拉傷", "撞擊", "過度使用"],
 };
 
@@ -33,7 +34,7 @@ export default function Home() {
   const [started, setStarted] = useState(false);
   const [step, setStep] = useState(0);
   const [profile, setProfile] = useState({ gender: "女性", age: "28", height: "165", weight: "60", build: "標準" });
-  const [region, setRegion] = useState("左膝");
+  const [region, setRegion] = useState("");
   const [symptom, setSymptom] = useState({ direction: "後側", feeling: "緊繃", trigger: "扭傷" });
   const [poseReady, setPoseReady] = useState(false);
   const [verified, setVerified] = useState(false);
@@ -43,15 +44,34 @@ export default function Home() {
   const [tapeLength, setTapeLength] = useState(22);
   const [tapeRotation, setTapeRotation] = useState(-6);
   const [tapePosition, setTapePosition] = useState({ x: 50, y: 50 });
+  const [followUp, setFollowUp] = useState({ hours: "4", before: 8, after: 4, feedback: "有改善" });
+  const [recordSaved, setRecordSaved] = useState(false);
   const simulationRef = useRef<HTMLDivElement>(null);
 
-  const selectedRegion = useMemo(() => joints.find((item) => item.name === region) ?? joints[4], [region]);
+  const selectedRegion = useMemo(() => joints.find((item) => item.name === region), [region]);
   const isArm = ["肩", "肘", "腕"].some((joint) => region.includes(joint));
   const isKnee = region.includes("膝");
-  const tapeCutClass = isKnee ? "double-i-cut" : isArm ? "i-cut" : "y-cut";
-  const tapePhotoClass = isKnee ? "double-i-shape" : isArm ? "i-shape" : "y-shape";
-  const tapeTypeTitle = isKnee ? "雙 I 型交叉包覆" : isArm ? "I 型（單條未分叉）" : "Y 型（單端縱向分叉）";
-  const targetMuscle = selectedRegion.muscles;
+  const recommendation = useMemo(() => {
+    if (["紅腫", "瘀青", "發熱"].includes(symptom.feeling)) return { type: "爪型", cutClass: "claw-cut", photoClass: "claw-shape", method: "爪型分散貼附，肌貼不可拉張力", tension: "0%", direction: "由不適區域外圍朝中心", start: "不適區域外側" };
+    const side = symptom.direction;
+    if (region.includes("腕") || region.includes("肘")) {
+      if (side === "前側") return { type: "Y 型", cutClass: "y-cut", photoClass: "y-shape", method: "沿肌群分叉貼附，協助放鬆", tension: "15–25%", direction: region.includes("腕") ? "手掌 → 手肘" : "前臂 → 上臂", start: region.includes("腕") ? "手掌近腕處" : "前臂近肘處" };
+      if (side === "後側") return { type: "I 型＋Y 型", cutClass: "combo-cut", photoClass: "combo-shape", method: "I 型橫向加壓，Y 型沿肌群放鬆", tension: "15–25%", direction: "橫向固定＋向上延伸", start: `${region}後側下方` };
+      return { type: "I 型", cutClass: "i-cut", photoClass: "i-shape", method: "雙向鎖定固定", tension: "33–50%", direction: `沿${side}雙向固定`, start: `${region}${side}下方` };
+    }
+    if (region.includes("膝")) {
+      if (side === "前側") return { type: "Y 型", cutClass: "y-cut", photoClass: "y-shape", method: "沿髕骨外緣包覆貼附", tension: "15–25%", direction: "髕骨下方 → 兩側上方", start: "髕骨下方" };
+      if (side === "後側") return { type: "X 型", cutClass: "x-cut", photoClass: "x-shape", method: "朝四角延伸，分散後側壓力", tension: "15–25%", direction: "膝窩中心 → 四角", start: "膝窩中央" };
+      return { type: "I 型", cutClass: "i-cut", photoClass: "i-shape", method: "順韌帶縱向固定", tension: "33–50%", direction: `沿膝關節${side}縱向貼附`, start: `膝關節${side}下方` };
+    }
+    if (side === "前側") return { type: "I 型", cutClass: "i-cut", photoClass: "i-shape", method: "小腿前側順貼至腳背", tension: "15–25%", direction: "小腿前側 → 腳背", start: "小腿前側" };
+    if (side === "後側") return { type: "Y 型", cutClass: "y-cut", photoClass: "y-shape", method: "由足跟出發包覆跟腱", tension: "15–25%", direction: "足跟 → 跟腱兩側", start: "足跟下方" };
+    return { type: "爪型", cutClass: "claw-cut", photoClass: "claw-shape", method: "分叉包覆踝關節側面", tension: "0–15%", direction: `足底 → 踝關節${side}`, start: "足底外緣" };
+  }, [region, symptom.direction, symptom.feeling]);
+  const tapeCutClass = recommendation.cutClass;
+  const tapePhotoClass = recommendation.photoClass;
+  const tapeTypeTitle = recommendation.type;
+  const targetMuscle = selectedRegion?.muscles ?? "尚未選擇";
   const poseTitle = isArm ? `伸展${region}周圍肌群` : `伸展${region}周圍肌群`;
   const poseCopy = isArm
     ? `將${region.slice(0, 1)}手自然向外伸直，緩慢調整手掌方向，直到${region}周圍感到輕微拉伸。將身體放入透明輪廓內。`
@@ -77,6 +97,26 @@ export default function Home() {
       y: Math.max(15, Math.min(85, ((clientY - rect.top) / rect.height) * 100)),
     });
     setVerified(false);
+  }
+
+  function saveFollowUp() {
+    const improvement = followUp.before > 0
+      ? Math.round(((followUp.before - followUp.after) / followUp.before) * 100)
+      : 0;
+    const record = {
+      id: `KT-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      region,
+      symptom,
+      tapeType: tapeTypeTitle,
+      tapeLength,
+      ...followUp,
+      improvement,
+      recommendationWeight: followUp.feedback === "有改善" ? 0.5 : followUp.feedback === "更不舒服" ? -0.5 : 0,
+    };
+    const history = JSON.parse(localStorage.getItem("kinetiq-follow-up-history") ?? "[]");
+    localStorage.setItem("kinetiq-follow-up-history", JSON.stringify([record, ...history].slice(0, 20)));
+    setRecordSaved(true);
   }
 
   if (!started) {
@@ -168,33 +208,37 @@ export default function Home() {
                       {["纖細", "標準", "健壯"].map((value) => <button key={value} className={profile.build === value ? "selected" : ""} onClick={() => setProfile({ ...profile, build: value })}><i className={`body-shape ${value}`} />{value}</button>)}
                     </div>
                   </label>
+                  <div className="step-inline-question">
+                    <p><span>01</span>這次因為什麼原因而不適？</p>
+                    <div className="choice-row">
+                      {answers.trigger.map((choice) => <button type="button" key={choice} className={symptom.trigger === choice ? "selected" : ""} onClick={() => setSymptom({ ...symptom, trigger: choice })}>{choice}<i>✓</i></button>)}
+                    </div>
+                  </div>
                 </div>
                 <ModelPanel profile={profile} region={region} />
               </div>
             )}
 
             {step === 1 && (
-              <div className="two-column">
-                <div>
-                  <div className="region-grid">
-                    {joints.map((item) => (
-                      <button key={item.name} className={`region-card ${region === item.name ? "selected" : ""}`} onClick={() => setRegion(item.name)}>
-                        <span>{item.icon}</span><div><b>{item.name}</b><small>{item.muscles}</small></div><i>✓</i>
-                      </button>
-                    ))}
-                  </div>
-                  <div className="info-strip">可點選左側關節卡片，或直接點擊人體模型上的亮點。兩者會同步選取。</div>
-                </div>
+              <div className="step-two-layout">
                 <ModelPanel profile={profile} region={region} highlight onSelect={setRegion} />
+                <div className="step-inline-question joint-feeling">
+                  <p><span>01</span>你感受到哪種不適？</p>
+                  <div className="choice-row">
+                    {answers.feeling.map((choice) => <button type="button" key={choice} className={symptom.feeling === choice ? "selected" : ""} onClick={() => setSymptom({ ...symptom, feeling: choice })}>{choice}<i>✓</i></button>)}
+                  </div>
+                </div>
               </div>
             )}
 
             {step === 2 && (
-              <div className="question-card">
-                <div className="summary-chip"><span>目前選擇</span><b>{region}</b><small>{selectedRegion.muscles}</small></div>
-                <ChoiceQuestion number="01" title="不適主要在哪個方向？" choices={answers.direction} value={symptom.direction} onChange={(value) => setSymptom({ ...symptom, direction: value })} />
-                <ChoiceQuestion number="02" title="你感受到哪種不適？" choices={answers.feeling} value={symptom.feeling} onChange={(value) => setSymptom({ ...symptom, feeling: value })} />
-                <ChoiceQuestion number="03" title={`${region}因為什麼原因而不適？`} choices={answers.trigger} value={symptom.trigger} onChange={(value) => setSymptom({ ...symptom, trigger: value })} />
+              <div className="two-column step-three-layout">
+                <div className="question-card">
+                  <div className="summary-chip"><span>目前選擇</span><b>{region}</b><small>{selectedRegion?.muscles}</small></div>
+                  <ChoiceQuestion number="01" title="不適主要在哪個方向？" choices={answers.direction} value={symptom.direction} onChange={(value) => setSymptom({ ...symptom, direction: value })} />
+                  <div className="info-strip">右側人體模型會顯示你在上一步選擇的關節位置。</div>
+                </div>
+                <ModelPanel profile={profile} region={region} highlight />
               </div>
             )}
 
@@ -226,13 +270,13 @@ export default function Home() {
                   <span className="result-badge">分析完成</span>
                   <div className={`tape-shape ${tapeCutClass}`}><i /><i /></div>
                   <b>{tapeTypeTitle}</b>
-                  <small>{isKnee ? "兩條獨立 I 型肌貼交叉包覆髕骨" : isArm ? "一整條肌貼，兩端修圓" : "保留共同錨點，再沿中線剪出兩條尾端"}</small>
+                  <small>{recommendation.method}</small>
                 </div>
                 <div className="metrics">
                   <div><span>建議長度</span><b>22 <small>cm</small></b><em>肌肉路徑 20 cm + 錨點預留</em></div>
-                  <div><span>拉伸比例</span><b>25<small>%</small></b><em>中度支撐，不影響活動</em></div>
-                  <div><span>貼附方向</span><b>{isKnee ? "交叉包覆" : "由下往上"}</b><em>{isKnee ? "兩條 I 型分別沿髕骨兩側貼附" : `沿${isArm ? "上臂" : "腿後"}肌群排列方向`}</em></div>
-                  <div><span>起始位置</span><b>{isKnee ? "髕骨下方" : isArm ? "手肘上方" : "膝窩上方"}</b><em>保留 3 cm 無拉力錨點</em></div>
+                  <div><span>拉伸比例</span><b>{recommendation.tension}</b><em>{recommendation.method}</em></div>
+                  <div><span>貼附方向</span><b>{recommendation.direction}</b><em>依 Step 2、3 的選擇產生</em></div>
+                  <div><span>起始位置</span><b>{recommendation.start}</b><em>固定端保留 3 cm 無拉力錨點</em></div>
                 </div>
                 <div className="reason-card"><b>方案依據</b><p>{profile.height} cm · {profile.build}體型 · {region}{symptom.direction} · {symptom.feeling} · {symptom.trigger}</p><p>可能相關肌群：<strong>{targetMuscle}</strong></p></div>
               </div>
@@ -271,8 +315,8 @@ export default function Home() {
                   <div className="tape-control"><label><span>肌貼長度</span><b>{tapeLength} cm</b></label><input type="range" min="12" max="35" value={tapeLength} onChange={(event) => { setTapeLength(Number(event.target.value)); setVerified(false); }} /></div>
                   <div className="tape-control"><label><span>貼附角度</span><b>{tapeRotation}°</b></label><input type="range" min="-90" max="90" value={tapeRotation} onChange={(event) => { setTapeRotation(Number(event.target.value)); setVerified(false); }} /></div>
                   <div className="check-row"><span>01</span><p><b>裁剪長度</b><small>{tapeLength} cm，末端修圓角</small></p><i>{simulationPhoto ? "✓" : "—"}</i></div>
-                  <div className="check-row"><span>02</span><p><b>{tapeTypeTitle}</b><small>{isKnee ? "使用兩條獨立 I 型肌貼交叉包覆，不是單條 Y 型" : isArm ? "整條直接沿肌肉路徑貼附，兩端修圓" : "保留 5 cm 共同錨點，其餘沿中線分成兩尾"}</small></p><i>✓</i></div>
-                  <div className="check-row"><span>03</span><p><b>貼附方向</b><small>沿{region}周圍肌群向上貼附</small></p><i>{verified ? "✓" : "—"}</i></div>
+                  <div className="check-row"><span>02</span><p><b>{tapeTypeTitle}</b><small>{recommendation.method}</small></p><i>✓</i></div>
+                  <div className="check-row"><span>03</span><p><b>貼附方向</b><small>{recommendation.direction}</small></p><i>{verified ? "✓" : "—"}</i></div>
                   <button className="secondary-button" disabled={!simulationPhoto} onClick={() => setVerified(true)}>{verified ? `已確認 ${tapeLength} cm 與貼附位置` : simulationPhoto ? "確認長度與貼附位置" : "請先拍攝貼附位置"}</button>
                 </div>
               </div>
@@ -281,12 +325,16 @@ export default function Home() {
             {step === 6 && (
               <ARGuide region={region} tapePhotoClass={tapePhotoClass} tapeLength={tapeLength} tapeRotation={tapeRotation} guideStep={arGuideStep} setGuideStep={setArGuideStep} captured={arCaptured} setCaptured={setArCaptured} />
             )}
+
+            {step === 7 && (
+              <FollowUpAnalysis region={region} tapeType={tapeTypeTitle} followUp={followUp} setFollowUp={(value) => { setFollowUp(value); setRecordSaved(false); }} saved={recordSaved} />
+            )}
           </div>
 
           <footer className="actions">
             <button className="back-button" onClick={back} disabled={step === 0}>← 上一步</button>
-            <span>約需 {Math.max(1, 7 - step)} 分鐘完成</span>
-            {step < 6 ? <button className="primary-button" onClick={next} disabled={step === 3 && !poseReady}>繼續 <span>→</span></button> : <button className="primary-button" onClick={() => { setStep(0); setPoseReady(false); setVerified(false); setStarted(false); }}>完成並返回首頁 <span>↻</span></button>}
+            <span>{step === 7 ? "完成後將保存於此裝置" : `約需 ${Math.max(1, 8 - step)} 分鐘完成`}</span>
+            {step < 7 ? <button className="primary-button" onClick={next} disabled={(step === 1 && !region) || (step === 3 && !poseReady)}>繼續 <span>→</span></button> : !recordSaved ? <button className="primary-button" onClick={saveFollowUp}>儲存追蹤紀錄 <span>✓</span></button> : <button className="primary-button" onClick={() => { setStep(0); setPoseReady(false); setVerified(false); setRecordSaved(false); setStarted(false); }}>完成並返回首頁 <span>↻</span></button>}
           </footer>
         </section>
       </div>
@@ -296,6 +344,41 @@ export default function Home() {
 
 function ChoiceQuestion({ number, title, choices, value, onChange }: { number: string; title: string; choices: string[]; value: string; onChange: (value: string) => void }) {
   return <fieldset><legend><span>{number}</span>{title}</legend><div className="choice-row">{choices.map((choice) => <button type="button" key={choice} className={value === choice ? "selected" : ""} onClick={() => onChange(choice)}>{choice}<i>✓</i></button>)}</div></fieldset>;
+}
+
+type FollowUpValue = { hours: string; before: number; after: number; feedback: string };
+
+function FollowUpAnalysis({ region, tapeType, followUp, setFollowUp, saved }: { region: string; tapeType: string; followUp: FollowUpValue; setFollowUp: (value: FollowUpValue) => void; saved: boolean }) {
+  const improvement = followUp.before > 0 ? Math.round(((followUp.before - followUp.after) / followUp.before) * 100) : 0;
+  const weight = followUp.feedback === "有改善" ? "+0.5" : followUp.feedback === "更不舒服" ? "−0.5" : "0";
+  const status = followUp.after < followUp.before ? "疼痛程度下降" : followUp.after === followUp.before ? "疼痛程度持平" : "疼痛程度上升";
+
+  return (
+    <div className="follow-layout">
+      <section className="follow-form">
+        <div className="follow-summary"><span>本次方案</span><b>{region} · {tapeType}</b><small>請依實際感受填寫，協助優化下次建議</small></div>
+        <fieldset><legend><span>01</span>肌貼使用時間</legend><div className="choice-row follow-hours">{["2", "4", "8", "12"].map((hours) => <button type="button" key={hours} className={followUp.hours === hours ? "selected" : ""} onClick={() => setFollowUp({ ...followUp, hours })}>{hours} 小時<i>✓</i></button>)}</div></fieldset>
+        <PainScale label="貼附前疼痛程度" value={followUp.before} onChange={(before) => setFollowUp({ ...followUp, before })} />
+        <PainScale label="貼附後疼痛程度" value={followUp.after} onChange={(after) => setFollowUp({ ...followUp, after })} />
+        <fieldset className="feedback-field"><legend><span>04</span>整體使用效果</legend><div className="choice-row">{["有改善", "無明顯改善", "更不舒服"].map((feedback) => <button type="button" key={feedback} className={followUp.feedback === feedback ? "selected" : ""} onClick={() => setFollowUp({ ...followUp, feedback })}>{feedback}<i>✓</i></button>)}</div></fieldset>
+      </section>
+
+      <aside className="analysis-card">
+        <span className="analysis-badge">個人化分析</span>
+        <div className={`improvement-ring ${improvement < 0 ? "negative" : ""}`} style={{ "--score": `${Math.max(0, Math.min(100, improvement)) * 3.6}deg` } as React.CSSProperties}><div><b>{improvement}%</b><small>改善率</small></div></div>
+        <h2>{status}</h2>
+        <p>貼前 <b>{followUp.before}/10</b><i>→</i>貼後 <b>{followUp.after}/10</b></p>
+        <div className="analysis-metrics"><div><span>使用時間</span><b>{followUp.hours} 小時</b></div><div><span>推薦權重</span><b>{weight}</b></div></div>
+        <div className={`analysis-advice ${followUp.feedback === "更不舒服" || improvement < 0 ? "warning" : ""}`}>{followUp.feedback === "更不舒服" || improvement < 0 ? "使用後更不舒服，請停止使用並尋求專業評估。" : followUp.feedback === "有改善" ? "本次方案有效，系統會提高相似方案的推薦程度。" : "效果尚不明顯，下次將調整肌貼參數與推薦方式。"}</div>
+        {saved && <div className="saved-message">✓ 紀錄已保存至個人肌貼紀錄</div>}
+        <small className="storage-note">目前紀錄保存在此裝置，之後可銜接會員雲端資料。</small>
+      </aside>
+    </div>
+  );
+}
+
+function PainScale({ label, value, onChange }: { label: string; value: number; onChange: (value: number) => void }) {
+  return <div className="pain-scale"><div><span>{label}</span><b>{value}<small>/10</small></b></div><input aria-label={label} type="range" min="0" max="10" step="1" value={value} onChange={(event) => onChange(Number(event.target.value))} /><div className="scale-labels"><span>無疼痛</span><span>中度</span><span>非常疼痛</span></div></div>;
 }
 
 type ARGuideProps = {
@@ -439,6 +522,7 @@ function ModelPanel({ profile, region, highlight = false, onSelect }: { profile:
         <span className="live-chip">● {onSelect ? "點擊關節進行選擇" : "模型預覽"}</span>
       </div>
       <div className="body-model">
+        {onSelect && <><span className="side-label side-left">L</span><span className="side-label side-right">R</span></>}
         <div className="human">
           <i className="h-head" /><i className="h-neck" /><i className="h-body" />
           <i className="h-arm left" /><i className="h-arm right" />
@@ -460,8 +544,8 @@ function ModelPanel({ profile, region, highlight = false, onSelect }: { profile:
         <div className="orbit o1" /><div className="orbit o2" />
       </div>
       <div className="selected-joint">
-        <span>目前選擇</span><b>{region}</b>
-        <small>{joints.find((joint) => joint.name === region)?.muscles}</small>
+        <span>目前選擇</span><b>{region || "尚未選擇"}</b>
+        <small>{joints.find((joint) => joint.name === region)?.muscles ?? "請在下一步選擇不適關節"}</small>
       </div>
       <div className="model-stats">
         <span><b>{profile.height}</b> cm<small>身高</small></span>
