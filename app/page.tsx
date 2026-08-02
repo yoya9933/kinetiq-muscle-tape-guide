@@ -36,7 +36,7 @@ export default function Home() {
   const [appEntering, setAppEntering] = useState(false);
   const [showExperienceForm, setShowExperienceForm] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(true);
   const [experienceProfile, setExperienceProfile] = useState({ name: "", email: "" });
   const [demoUser, setDemoUser] = useState<{ name: string; id: string } | null>(null);
   const [step, setStep] = useState(0);
