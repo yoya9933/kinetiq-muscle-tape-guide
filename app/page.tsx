@@ -79,7 +79,7 @@ export default function Home() {
   const tapePhotoClass = recommendation.photoClass;
   const tapeTypeTitle = recommendation.type;
   const hasBranchControl = ["claw-shape", "y-shape", "combo-shape"].includes(tapePhotoClass);
-  const maxBranchAngle = tapePhotoClass === "claw-shape" ? 45 : 45;
+  const maxBranchAngle = tapePhotoClass === "claw-shape" ? 30 : 45;
   const tapeShapeStyle = { "--branch-angle": `${branchAngle}deg` } as CSSProperties;
   const targetMuscle = selectedRegion?.muscles ?? "尚未選擇";
   const poseTitle = isArm ? `伸展${region}周圍肌群` : `伸展${region}周圍肌群`;
