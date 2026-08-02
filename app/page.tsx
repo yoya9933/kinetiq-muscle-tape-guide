@@ -46,7 +46,7 @@ export default function Home() {
   const [arCaptured, setArCaptured] = useState(false);
   const [arGuideStep, setArGuideStep] = useState(0);
   const [tapeLength, setTapeLength] = useState(22);
-  const [tapeRotation, setTapeRotation] = useState(-6);
+  const [tapeRotation, setTapeRotation] = useState(0);
   const [tapePosition, setTapePosition] = useState({ x: 50, y: 50 });
   const [followUp, setFollowUp] = useState({ hours: "4", before: 8, after: 4, feedback: "有改善" });
   const [recordSaved, setRecordSaved] = useState(false);
