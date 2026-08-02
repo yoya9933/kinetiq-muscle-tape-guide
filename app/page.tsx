@@ -46,6 +46,8 @@ export default function Home() {
   const [tapePosition, setTapePosition] = useState({ x: 50, y: 50 });
   const [followUp, setFollowUp] = useState({ hours: "4", before: 8, after: 4, feedback: "有改善" });
   const [recordSaved, setRecordSaved] = useState(false);
+  const [applicationMode, setApplicationMode] = useState<"" | "self" | "machine">("");
+  const [machineFileNo, setMachineFileNo] = useState("");
   const simulationRef = useRef<HTMLDivElement>(null);
 
   const selectedRegion = useMemo(() => joints.find((item) => item.name === region), [region]);
@@ -117,6 +119,11 @@ export default function Home() {
     const history = JSON.parse(localStorage.getItem("kinetiq-follow-up-history") ?? "[]");
     localStorage.setItem("kinetiq-follow-up-history", JSON.stringify([record, ...history].slice(0, 20)));
     setRecordSaved(true);
+  }
+
+  function chooseMachine() {
+    setApplicationMode("machine");
+    if (!machineFileNo) setMachineFileNo(String(Date.now()).slice(-9).padStart(9, "0"));
   }
 
   if (!started) {
@@ -279,6 +286,26 @@ export default function Home() {
                   <div><span>起始位置</span><b>{recommendation.start}</b><em>固定端保留 3 cm 無拉力錨點</em></div>
                 </div>
                 <div className="reason-card"><b>方案依據</b><p>{profile.height} cm · {profile.build}體型 · {region}{symptom.direction} · {symptom.feeling} · {symptom.trigger}</p><p>可能相關肌群：<strong>{targetMuscle}</strong></p></div>
+                <section className="application-choice">
+                  <div className="choice-heading"><div><span>下一步</span><h2>選擇自行貼或是機台貼</h2></div><small>方案與檔案號碼會保留於本次紀錄</small></div>
+                  <div className="mode-grid">
+                    <button type="button" className={`mode-card ${applicationMode === "self" ? "selected" : ""}`} onClick={() => { setApplicationMode("self"); setStep(5); window.scrollTo({ top: 0, behavior: "smooth" }); }}>
+                      <span className="mode-icon">自</span><div><b>自行貼</b><small>透過手機完成剪裁與個人化肌貼導引</small></div><i>進入 Step 6 →</i>
+                    </button>
+                    <button type="button" className={`mode-card ${applicationMode === "machine" ? "selected" : ""}`} onClick={chooseMachine}>
+                      <span className="mode-icon">機</span><div><b>機台貼</b><small>取得檔案號碼，前往智慧肌貼機台讀取方案</small></div><i>查看機台位置 →</i>
+                    </button>
+                  </div>
+                  {applicationMode === "machine" && (
+                    <div className="machine-panel">
+                      <div className="machine-ticket"><span>機台讀取檔案號碼</span><b>{machineFileNo}</b><small>請在智慧肌貼機台輸入此號碼</small></div>
+                      <div className="machine-map">
+                        <iframe title="智慧肌貼機台位置地圖" src="https://www.openstreetmap.org/export/embed.html?bbox=121.5000%2C25.0200%2C121.5900%2C25.0900&amp;layer=mapnik&amp;marker=25.0478%2C121.5319" loading="lazy" />
+                        <div><b>智慧肌貼機台位置</b><small>目前顯示台北示範據點，正式機台上線後可改為即時據點。</small><a href="https://www.openstreetmap.org/?mlat=25.0478&amp;mlon=121.5319#map=14/25.0478/121.5319" target="_blank" rel="noreferrer">開啟完整地圖 ↗</a></div>
+                      </div>
+                    </div>
+                  )}
+                </section>
               </div>
             )}
 
