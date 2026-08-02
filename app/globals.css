@@ -158,9 +158,9 @@ fieldset { border:0; padding:0; margin:0 0 26px; }legend{font-weight:700;font-si
 
 /* Adjustable branch geometry shared by Step 6 and the AR overlay. */
 .photo-tape.y-shape i:first-child,.photo-tape.combo-shape i:first-child{transform:rotate(calc(var(--branch-angle,22deg) * -1))}
-.photo-tape.y-shape i:last-child,.photo-tape.combo-shape i:last-child{transform:rotate(var(--branch-angle,22deg))}
+.photo-tape.y-shape i:nth-of-type(2),.photo-tape.combo-shape i:nth-of-type(2){transform:rotate(var(--branch-angle,22deg))}
 .photo-tape.claw-shape i:first-child{transform:rotate(calc(var(--branch-angle,12deg) * -1))}
-.photo-tape.claw-shape i:last-child{transform:rotate(var(--branch-angle,12deg))}
+.photo-tape.claw-shape i:nth-of-type(2){transform:rotate(var(--branch-angle,12deg))}
 .photo-tape.claw-shape i:first-child:before{transform:rotate(calc(var(--branch-angle,12deg) * .34))}
-.photo-tape.claw-shape i:last-child:before{transform:rotate(calc(var(--branch-angle,12deg) * -.34))}
+.photo-tape.claw-shape i:nth-of-type(2):before{transform:rotate(calc(var(--branch-angle,12deg) * -.34))}
 .angle-presets{display:flex;gap:6px;margin-top:8px}.angle-presets button{flex:1;border:1px solid var(--line);border-radius:7px;padding:6px;background:#fff;color:var(--teal);font-size:9px;font-weight:800;cursor:pointer}.angle-presets button:hover{border-color:var(--teal);background:#eef8f4}
