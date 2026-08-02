@@ -32,6 +32,9 @@ const answers = {
 
 export default function Home() {
   const [started, setStarted] = useState(false);
+  const [showExperienceForm, setShowExperienceForm] = useState(false);
+  const [experienceProfile, setExperienceProfile] = useState({ name: "", email: "" });
+  const [demoUser, setDemoUser] = useState<{ name: string; id: string } | null>(null);
   const [step, setStep] = useState(0);
   const [profile, setProfile] = useState({ gender: "女性", age: "28", height: "165", weight: "60", build: "標準" });
   const [region, setRegion] = useState("");
@@ -126,21 +129,48 @@ export default function Home() {
     if (!machineFileNo) setMachineFileNo(String(Date.now()).slice(-9).padStart(9, "0"));
   }
 
+  function createExperienceProfile() {
+    const name = experienceProfile.name.trim();
+    if (!name) return;
+    const demo = { name, email: experienceProfile.email.trim(), id: `KT${String(Date.now()).slice(-7)}`, createdAt: new Date().toISOString() };
+    localStorage.setItem("kinetiq-demo-profile", JSON.stringify(demo));
+    setDemoUser({ name: demo.name, id: demo.id });
+    setShowExperienceForm(false);
+    setStarted(true);
+  }
+
   if (!started) {
     return (
-      <main className="landing-page">
-        <img src="/kinetiq-home.png" alt="KinetiQ 個人化智慧肌貼導引：身體模型、症狀分析、姿勢矯正、肌貼方案、模擬預覽與 AR 導引" />
-        <div className="landing-shade" />
-        <div className="landing-top">
-          <span className="landing-logo"><i>K</i>KinetiQ</span>
-          <span>個人化智慧肌貼導引</span>
-        </div>
-        <div className="landing-action">
-          <p>從不適關節與症狀開始，取得個人化肌貼參數與逐步貼附指引。</p>
-          <button onClick={() => setStarted(true)}>開始個人化導引 <span>→</span></button>
-          <small>約 7 分鐘完成 · 本服務為操作輔助，不能取代醫療診斷</small>
-        </div>
-      </main>
+      <>
+        <main className="landing-page">
+          <img src="/kinetiq-home.png" alt="KinetiQ 個人化智慧肌貼導引：身體模型、症狀分析、姿勢矯正、肌貼方案、模擬預覽與 AR 導引" />
+          <div className="landing-shade" />
+          <div className="landing-top">
+            <span className="landing-logo"><i>K</i>KinetiQ</span>
+            <span>個人化智慧肌貼導引</span>
+          </div>
+          <div className="landing-action">
+            <p>從不適關節與症狀開始，取得個人化肌貼參數與逐步貼附指引。</p>
+            <div className="landing-entry-actions">
+              <button className="experience-button" onClick={() => setShowExperienceForm(true)}>建立體驗檔案 <span>→</span></button>
+              <button className="guest-button" onClick={() => { setDemoUser({ name: "訪客", id: "GUEST" }); setStarted(true); }}>直接以訪客開始</button>
+            </div>
+            <small>約 8 分鐘完成 · 體驗資料僅保存在此裝置 · 本服務不能取代醫療診斷</small>
+          </div>
+        </main>
+        {showExperienceForm && (
+          <div className="experience-modal" role="dialog" aria-modal="true" aria-labelledby="experience-title">
+            <div className="experience-card">
+              <div className="experience-head"><div><span>DEMO PROFILE</span><h2 id="experience-title">建立體驗檔案</h2></div><button aria-label="關閉" onClick={() => setShowExperienceForm(false)}>×</button></div>
+              <p>建立簡易體驗身分，讓評審可以查看本次操作與貼後分析紀錄。</p>
+              <label>姓名或暱稱<input autoFocus value={experienceProfile.name} onChange={(event) => setExperienceProfile({ ...experienceProfile, name: event.target.value })} placeholder="例如：王小明" /></label>
+              <label>Email <small>選填</small><input type="email" value={experienceProfile.email} onChange={(event) => setExperienceProfile({ ...experienceProfile, email: event.target.value })} placeholder="demo@example.com" /></label>
+              <div className="experience-privacy"><b>展示模式</b><span>不需密碼，資料只保存在目前瀏覽器。</span></div>
+              <button className="create-demo-button" disabled={!experienceProfile.name.trim()} onClick={createExperienceProfile}>建立並開始體驗 <span>→</span></button>
+            </div>
+          </div>
+        )}
+      </>
     );
   }
 
@@ -153,7 +183,7 @@ export default function Home() {
         </button>
         <div className="header-meta">
           <span className="status-dot" />
-          <span>個人化肌貼導引</span>
+          <span>{demoUser ? `${demoUser.name} · ${demoUser.id}` : "個人化肌貼導引"}</span>
           <button className="help-button" aria-label="使用說明">?</button>
         </div>
       </header>
