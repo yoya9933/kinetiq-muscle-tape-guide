@@ -248,13 +248,13 @@ export default function Home() {
             <div><i style={{ width: `${((step + 1) / availableSteps.length) * 100}%` }} /></div>
           </div>
 
-          <div className="content-head">
+          <div className="content-head step-transition" key={`head-${step}`}>
             <p className="eyebrow">STEP {String(step + 1).padStart(2, "0")}</p>
             <h1>{availableSteps[step].title}</h1>
             <p>{availableSteps[step].hint}</p>
           </div>
 
-          <div className="stage">
+          <div className="stage step-transition" key={`stage-${step}`}>
             {step === 0 && (
               <div className="step-one-form-wrap">
                 <div className="form-card">

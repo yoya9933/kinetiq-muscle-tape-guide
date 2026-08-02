@@ -163,4 +163,10 @@ fieldset { border:0; padding:0; margin:0 0 26px; }legend{font-weight:700;font-si
 .photo-tape.claw-shape i:nth-of-type(2){transform:rotate(var(--branch-angle,12deg))}
 .photo-tape.claw-shape i:first-child:before{transform:rotate(calc(var(--branch-angle,12deg) * .34))}
 .photo-tape.claw-shape i:nth-of-type(2):before{transform:rotate(calc(var(--branch-angle,12deg) * -.34))}
+
+/* Smooth transition between guide steps. */
+.step-transition{animation:step-enter .38s cubic-bezier(.22,1,.36,1) both}
+.stage.step-transition{animation-delay:.04s}
+@keyframes step-enter{from{opacity:0;transform:translateY(12px);filter:blur(3px)}to{opacity:1;transform:translateY(0);filter:blur(0)}}
+@media(prefers-reduced-motion:reduce){.step-transition{animation:none}}
 .angle-presets{display:flex;gap:6px;margin-top:8px}.angle-presets button{flex:1;border:1px solid var(--line);border-radius:7px;padding:6px;background:#fff;color:var(--teal);font-size:9px;font-weight:800;cursor:pointer}.angle-presets button:hover{border-color:var(--teal);background:#eef8f4}
