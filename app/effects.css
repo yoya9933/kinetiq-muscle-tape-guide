@@ -1,0 +1,26 @@
+/* Holographic intensity layer — visual only. */
+body{font-family:var(--font-noto-tc),var(--font-geist-sans),sans-serif;font-feature-settings:"kern","liga";letter-spacing:.005em}
+.brand,.landing-logo{font-family:var(--font-geist-sans),var(--font-noto-tc),sans-serif;letter-spacing:-.035em}
+.content-head h1,.choice-heading h2,.analysis-card h2,.ar-guide h2{font-family:var(--font-noto-tc),var(--font-geist-sans),sans-serif;font-weight:700;letter-spacing:-.045em}
+button,input{font-family:inherit}
+.workspace:after{content:"";position:fixed;z-index:-2;inset:70px 0 0 300px;pointer-events:none;background:radial-gradient(ellipse at 12% 20%,rgba(56,197,165,.1),transparent 34%),radial-gradient(ellipse at 88% 72%,rgba(201,238,125,.14),transparent 32%),radial-gradient(ellipse at 54% 42%,rgba(83,142,225,.07),transparent 28%);filter:blur(10px);animation:aurora-drift 12s ease-in-out infinite alternate}
+.content-head h1{background:linear-gradient(100deg,var(--ink) 10%,var(--teal) 46%,#7fae34 58%,var(--ink) 82%);background-size:220% 100%;background-clip:text;-webkit-background-clip:text;color:transparent;animation:title-energy 7s ease-in-out infinite}
+.model-panel{transform-style:preserve-3d;transition:transform .45s cubic-bezier(.22,1,.36,1),box-shadow .45s ease}
+.model-panel:hover{transform:perspective(1100px) rotateX(1.6deg) rotateY(-2deg) translateY(-4px);box-shadow:22px 34px 80px rgba(6,35,31,.3)}
+.body-model:before{content:"";position:absolute;z-index:0;left:50%;top:48%;width:260px;height:260px;border-radius:50%;transform:translate(-50%,-50%);background:conic-gradient(from 0deg,transparent 0 18%,rgba(201,238,125,.48) 20%,transparent 22% 48%,rgba(81,205,174,.34) 50%,transparent 52% 78%,rgba(201,238,125,.35) 80%,transparent 82%);mask:radial-gradient(transparent 62%,#000 63% 66%,transparent 67%);animation:holo-orbit 9s linear infinite}
+.form-card:hover,.application-choice:hover,.simulation-panel:hover,.ar-guide:hover{border-color:rgba(98,190,156,.48);box-shadow:0 24px 58px rgba(15,63,55,.13),0 0 0 1px rgba(201,238,125,.16),inset 0 1px rgba(255,255,255,.8)}
+.result-hero,.reason-card,.bmi-card{background-size:200% 200%;animation:panel-breathe 7s ease-in-out infinite}
+.primary-button:after{content:"";position:absolute;inset:2px;border-radius:inherit;border:1px solid transparent;background:linear-gradient(90deg,transparent,rgba(201,238,125,.7),transparent) border-box;mask:linear-gradient(#000 0 0) padding-box,linear-gradient(#000 0 0);mask-composite:exclude;transform:translateX(-100%);animation:button-energy 3.2s ease-in-out infinite;pointer-events:none}
+.progress-item.active:after{content:"";position:absolute;right:8px;top:50%;width:5px;height:5px;border-radius:50%;background:var(--lime);box-shadow:0 0 12px 3px rgba(201,238,125,.65);animation:active-beacon 1.4s ease-in-out infinite}
+.photo-tape{animation:tape-hologram 2.8s ease-in-out infinite}
+.simulation-result:after,.ar-tape-layer:after{content:"";position:absolute;z-index:3;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,transparent 0 5px,rgba(201,238,125,.025) 6px);mix-blend-mode:screen;animation:holo-lines 6s linear infinite}
+@keyframes aurora-drift{0%{transform:translate3d(-2%,-1%,0) scale(1)}100%{transform:translate3d(3%,2%,0) scale(1.08)}}
+@keyframes title-energy{0%,100%{background-position:100% 0}50%{background-position:0 0}}
+@keyframes holo-orbit{to{transform:translate(-50%,-50%) rotate(360deg)}}
+@keyframes panel-breathe{50%{background-position:100% 100%;filter:saturate(1.08)}}
+@keyframes button-energy{0%,50%{transform:translateX(-110%);opacity:0}65%{opacity:1}100%{transform:translateX(110%);opacity:0}}
+@keyframes active-beacon{50%{transform:scale(1.7);opacity:.5}}
+@keyframes tape-hologram{50%{filter:drop-shadow(0 0 15px rgba(201,238,125,.9)) brightness(1.06)}}
+@keyframes holo-lines{to{background-position:0 48px}}
+@media(max-width:900px){.workspace:after{inset:70px 0 0 0}.model-panel:hover{transform:none}}
+@media(prefers-reduced-motion:reduce){.workspace:after,.content-head h1,.body-model:before,.result-hero,.reason-card,.bmi-card,.primary-button:after,.progress-item.active:after,.photo-tape,.simulation-result:after,.ar-tape-layer:after{animation:none}}
