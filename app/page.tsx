@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { usePageLanguage } from "./use-language";
 
 const steps = [
   { short: "身體模型", title: "建立個人化人體模型", hint: "建立身體比例並記錄不適原因" },
@@ -37,6 +38,7 @@ export default function Home() {
   const [showExperienceForm, setShowExperienceForm] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [darkMode, setDarkMode] = useState(true);
+  const [language, setLanguage] = useState<"zh" | "en">("zh");
   const [experienceProfile, setExperienceProfile] = useState({ name: "", email: "" });
   const [demoUser, setDemoUser] = useState<{ name: string; id: string } | null>(null);
   const [step, setStep] = useState(0);
@@ -59,6 +61,8 @@ export default function Home() {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [transitionDirection, setTransitionDirection] = useState<"forward" | "back">("forward");
   const simulationRef = useRef<HTMLDivElement>(null);
+  usePageLanguage(language);
+  useEffect(() => { const saved = localStorage.getItem("kinetiq-language"); if (saved === "en") setLanguage("en"); }, []);
   const isGuest = demoUser?.id === "GUEST";
   const availableSteps = isGuest ? steps.slice(0, 7) : steps;
 
@@ -181,7 +185,7 @@ export default function Home() {
           <div className="landing-shade" />
           <div className="landing-top">
             <span className="landing-logo"><i>K</i>KinetiQ</span>
-            <span>個人化智慧肌貼導引</span>
+            <div className="landing-language"><span>個人化智慧肌貼導引</span><button className="language-button" aria-label={language === "zh" ? "Switch to English" : "切換成中文"} onClick={() => setLanguage((value) => value === "zh" ? "en" : "zh")}>{language === "zh" ? "EN" : "中"}</button></div>
           </div>
           <div className="landing-action">
             <p>從不適關節與症狀開始，取得個人化肌貼參數與逐步貼附指引。</p>
@@ -220,6 +224,7 @@ export default function Home() {
         <div className="header-meta">
           <span className="status-dot" />
           <span>{demoUser ? `${demoUser.name} · ${demoUser.id}` : "個人化肌貼導引"}</span>
+          <button className="language-button" aria-label={language === "zh" ? "Switch to English" : "切換成中文"} onClick={() => setLanguage((value) => value === "zh" ? "en" : "zh")}>{language === "zh" ? "EN" : "中"}</button>
           <button className="theme-button" aria-label={darkMode ? "切換亮色模式" : "切換暗黑模式"} title={darkMode ? "亮色模式" : "暗黑模式"} onClick={() => setDarkMode((value) => !value)}>{darkMode ? "☀" : "◐"}</button>
           <button className="help-button" aria-label="使用說明" onClick={() => setShowHelp(true)}>?</button>
         </div>
