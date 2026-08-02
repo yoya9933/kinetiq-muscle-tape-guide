@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { usePageLanguage } from "./use-language";
+import { useInterfaceEffects } from "./use-interface-effects";
 
 const steps = [
   { short: "身體模型", title: "建立個人化人體模型", hint: "建立身體比例並記錄不適原因" },
@@ -62,6 +63,7 @@ export default function Home() {
   const [transitionDirection, setTransitionDirection] = useState<"forward" | "back">("forward");
   const simulationRef = useRef<HTMLDivElement>(null);
   usePageLanguage(language);
+  useInterfaceEffects();
   useEffect(() => { const saved = localStorage.getItem("kinetiq-language"); if (saved === "en") setLanguage("en"); }, []);
   const isGuest = demoUser?.id === "GUEST";
   const availableSteps = isGuest ? steps.slice(0, 7) : steps;
