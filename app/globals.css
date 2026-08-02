@@ -140,3 +140,17 @@ fieldset { border:0; padding:0; margin:0 0 26px; }legend{font-weight:700;font-si
 .photo-tape.claw-shape i:before{width:12px;height:158px;bottom:0;transform:none}
 .photo-tape.claw-shape i:first-child:before{left:18px;transform:none}
 .photo-tape.claw-shape i:last-child:before{right:18px;transform:none}
+
+/* Reference claw shape: a narrow anchor that opens into four gently fanned tails. */
+.tape-shape.claw-cut:before{width:48px;height:64px;left:26px;bottom:0}
+.tape-shape.claw-cut i{width:11px;height:94px;top:3px;transform-origin:center bottom}
+.tape-shape.claw-cut i:first-child{left:20px;transform:rotate(-6deg)}
+.tape-shape.claw-cut i:last-child{right:20px;transform:rotate(6deg)}
+.tape-shape.claw-cut i:first-child:before{left:15px;transform:rotate(4deg)}
+.tape-shape.claw-cut i:last-child:before{right:15px;transform:rotate(-4deg)}
+.photo-tape.claw-shape:before{width:44px;height:82px;left:17px;bottom:0}
+.photo-tape.claw-shape i{width:12px;height:156px;bottom:74px;transform-origin:center bottom}
+.photo-tape.claw-shape i:first-child{left:8px;transform:rotate(-6deg)}
+.photo-tape.claw-shape i:last-child{right:8px;transform:rotate(6deg)}
+.photo-tape.claw-shape i:first-child:before{left:18px;transform:rotate(4deg)}
+.photo-tape.claw-shape i:last-child:before{right:18px;transform:rotate(-4deg)}
