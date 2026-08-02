@@ -301,7 +301,7 @@ export default function Home() {
                       <div className="machine-ticket"><span>機台讀取檔案號碼</span><b>{machineFileNo}</b><small>請在智慧肌貼機台輸入此號碼</small></div>
                       <div className="machine-map">
                         <iframe title="智慧肌貼機台位置地圖" src="https://www.openstreetmap.org/export/embed.html?bbox=121.5000%2C25.0200%2C121.5900%2C25.0900&amp;layer=mapnik&amp;marker=25.0478%2C121.5319" loading="lazy" />
-                        <div><b>智慧肌貼機台位置</b><small>目前顯示台北示範據點，正式機台上線後可改為即時據點。</small><a href="https://www.openstreetmap.org/?mlat=25.0478&amp;mlon=121.5319#map=14/25.0478/121.5319" target="_blank" rel="noreferrer">開啟完整地圖 ↗</a></div>
+                        <div><b>智慧肌貼機台位置</b><small>目前顯示台北示範據點，正式機台上線後可改為即時據點。</small><a href={`/machines?file=${machineFileNo}`} target="_blank" rel="noreferrer">開啟 KinetiQ 機台地圖 ↗</a></div>
                       </div>
                     </div>
                   )}
