@@ -33,6 +33,7 @@ const answers = {
 export default function Home() {
   const [started, setStarted] = useState(false);
   const [showExperienceForm, setShowExperienceForm] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   const [experienceProfile, setExperienceProfile] = useState({ name: "", email: "" });
   const [demoUser, setDemoUser] = useState<{ name: string; id: string } | null>(null);
   const [step, setStep] = useState(0);
@@ -184,9 +185,31 @@ export default function Home() {
         <div className="header-meta">
           <span className="status-dot" />
           <span>{demoUser ? `${demoUser.name} · ${demoUser.id}` : "個人化肌貼導引"}</span>
-          <button className="help-button" aria-label="使用說明">?</button>
+          <button className="help-button" aria-label="使用說明" onClick={() => setShowHelp(true)}>?</button>
         </div>
       </header>
+
+      {showHelp && (
+        <div className="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title">
+          <div className="help-card">
+            <div className="help-head">
+              <div><span>QUICK GUIDE</span><h2 id="help-title">8 個步驟的操作方式</h2></div>
+              <button aria-label="關閉使用說明" onClick={() => setShowHelp(false)}>×</button>
+            </div>
+            <p className="help-intro">依序完成資料、症狀與關節選擇，系統會產生個人化肌貼方案。</p>
+            <ol className="help-steps">
+              {steps.map((item, index) => (
+                <li key={item.short} className={step === index ? "current" : ""}>
+                  <span>{index + 1}</span>
+                  <div><b>{item.short}</b><small>{item.hint}</small></div>
+                </li>
+              ))}
+            </ol>
+            <div className="help-note"><b>原型提醒</b><span>拍照、AR 與智慧剪裁為比賽展示功能，不能取代醫療診斷。</span></div>
+            <button className="help-close-button" onClick={() => setShowHelp(false)}>了解，繼續操作</button>
+          </div>
+        </div>
+      )}
 
       <div className="app-shell">
         <aside className="sidebar" aria-label="操作進度">
