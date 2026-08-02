@@ -361,7 +361,7 @@ export default function Home() {
           <footer className="actions">
             <button className="back-button" onClick={back} disabled={step === 0}>← 上一步</button>
             <span>{step === 7 ? "完成後將保存於此裝置" : `約需 ${Math.max(1, 8 - step)} 分鐘完成`}</span>
-            {step < 7 ? <button className="primary-button" onClick={next} disabled={(step === 1 && !region) || (step === 3 && !poseReady)}>繼續 <span>→</span></button> : !recordSaved ? <button className="primary-button" onClick={saveFollowUp}>儲存追蹤紀錄 <span>✓</span></button> : <button className="primary-button" onClick={() => { setStep(0); setPoseReady(false); setVerified(false); setRecordSaved(false); setStarted(false); }}>完成並返回首頁 <span>↻</span></button>}
+            {step === 4 ? <span aria-hidden="true" /> : step < 7 ? <button className="primary-button" onClick={next} disabled={(step === 1 && !region) || (step === 3 && !poseReady)}>繼續 <span>→</span></button> : !recordSaved ? <button className="primary-button" onClick={saveFollowUp}>儲存追蹤紀錄 <span>✓</span></button> : <button className="primary-button" onClick={() => { setStep(0); setPoseReady(false); setVerified(false); setRecordSaved(false); setStarted(false); }}>完成並返回首頁 <span>↻</span></button>}
           </footer>
         </section>
       </div>
