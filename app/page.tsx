@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 
 const steps = [
   { short: "身體模型", title: "建立個人化人體模型", hint: "建立身體比例並記錄不適原因" },
@@ -47,6 +47,7 @@ export default function Home() {
   const [arGuideStep, setArGuideStep] = useState(0);
   const [tapeLength, setTapeLength] = useState(22);
   const [tapeRotation, setTapeRotation] = useState(0);
+  const [branchAngle, setBranchAngle] = useState(22);
   const [tapePosition, setTapePosition] = useState({ x: 50, y: 50 });
   const [followUp, setFollowUp] = useState({ hours: "4", before: 8, after: 4, feedback: "有改善" });
   const [recordSaved, setRecordSaved] = useState(false);
@@ -77,6 +78,9 @@ export default function Home() {
   const tapeCutClass = recommendation.cutClass;
   const tapePhotoClass = recommendation.photoClass;
   const tapeTypeTitle = recommendation.type;
+  const hasBranchControl = ["claw-shape", "y-shape", "combo-shape"].includes(tapePhotoClass);
+  const maxBranchAngle = tapePhotoClass === "claw-shape" ? 30 : 45;
+  const tapeShapeStyle = { "--branch-angle": `${branchAngle}deg` } as CSSProperties;
   const targetMuscle = selectedRegion?.muscles ?? "尚未選擇";
   const poseTitle = isArm ? `伸展${region}周圍肌群` : `伸展${region}周圍肌群`;
   const poseCopy = isArm
@@ -386,7 +390,7 @@ export default function Home() {
                       <span className="camera-badge">模擬示意圖</span>
                       <div
                         className={`photo-tape ${tapePhotoClass}`}
-                        style={{ left: `${tapePosition.x}%`, top: `${tapePosition.y}%`, transform: `translate(-50%,-50%) rotate(${tapeRotation}deg) scale(${tapeLength / 22})` }}
+                        style={{ ...tapeShapeStyle, left: `${tapePosition.x}%`, top: `${tapePosition.y}%`, transform: `translate(-50%,-50%) rotate(${tapeRotation}deg) scale(${tapeLength / 22})` }}
                       ><i /><i /><b>{tapeLength} cm</b></div>
                       <div className="photo-anchor">① {isKnee ? "拖曳交叉點對準髕骨下方" : "拖曳肌貼調整位置"}</div>
                       <div className="photo-direction">角度 {tapeRotation}°</div>
@@ -399,6 +403,7 @@ export default function Home() {
                   <h2>照片模擬與貼附檢查</h2>
                   <div className="tape-control"><label><span>肌貼長度</span><b>{tapeLength} cm</b></label><input type="range" min="12" max="35" value={tapeLength} onChange={(event) => { setTapeLength(Number(event.target.value)); setVerified(false); }} /></div>
                   <div className="tape-control"><label><span>貼附角度</span><b>{tapeRotation}°</b></label><input type="range" min="-180" max="180" value={tapeRotation} onChange={(event) => { setTapeRotation(Number(event.target.value)); setVerified(false); }} /></div>
+                  {hasBranchControl && <div className="tape-control"><label><span>{tapePhotoClass === "claw-shape" ? "爪尾展開" : "Y 型分支展開"}</span><b>±{branchAngle}°</b></label><input aria-label="分支展開角度" type="range" min="0" max={maxBranchAngle} value={branchAngle} onChange={(event) => { setBranchAngle(Number(event.target.value)); setVerified(false); }} /><div className="angle-presets"><button type="button" onClick={() => setBranchAngle(0)}>收合</button><button type="button" onClick={() => setBranchAngle(tapePhotoClass === "claw-shape" ? 12 : 22)}>建議</button><button type="button" onClick={() => setBranchAngle(maxBranchAngle)}>展開</button></div></div>}
                   <div className="check-row"><span>01</span><p><b>裁剪長度</b><small>{tapeLength} cm，末端修圓角</small></p><i>{simulationPhoto ? "✓" : "—"}</i></div>
                   <div className="check-row"><span>02</span><p><b>{tapeTypeTitle}</b><small>{recommendation.method}</small></p><i>✓</i></div>
                   <div className="check-row"><span>03</span><p><b>貼附方向</b><small>{recommendation.direction}</small></p><i>{verified ? "✓" : "—"}</i></div>
@@ -408,7 +413,7 @@ export default function Home() {
             )}
 
             {step === 6 && (
-              <ARGuide region={region} tapePhotoClass={tapePhotoClass} tapeLength={tapeLength} tapeRotation={tapeRotation} guideStep={arGuideStep} setGuideStep={setArGuideStep} captured={arCaptured} setCaptured={setArCaptured} />
+              <ARGuide region={region} tapePhotoClass={tapePhotoClass} tapeLength={tapeLength} tapeRotation={tapeRotation} branchAngle={branchAngle} guideStep={arGuideStep} setGuideStep={setArGuideStep} captured={arCaptured} setCaptured={setArCaptured} />
             )}
 
             {step === 7 && (
@@ -471,13 +476,14 @@ type ARGuideProps = {
   tapePhotoClass: string;
   tapeLength: number;
   tapeRotation: number;
+  branchAngle: number;
   guideStep: number;
   setGuideStep: (step: number) => void;
   captured: boolean;
   setCaptured: (captured: boolean) => void;
 };
 
-function ARGuide({ region, tapePhotoClass, tapeLength, tapeRotation, guideStep, setGuideStep, captured, setCaptured }: ARGuideProps) {
+function ARGuide({ region, tapePhotoClass, tapeLength, tapeRotation, branchAngle, guideStep, setGuideStep, captured, setCaptured }: ARGuideProps) {
   const [video, setVideo] = useState<HTMLVideoElement | null>(null);
   const [tracking, setTracking] = useState<"waiting" | "loading" | "tracking" | "manual">("waiting");
   const [target, setTarget] = useState({ x: 50, y: 53, scale: 1 });
@@ -573,7 +579,7 @@ function ARGuide({ region, tapePhotoClass, tapeLength, tapeRotation, guideStep, 
           {(tracking === "tracking" || tracking === "manual") && (
             <>
               <span className="joint-lock" style={{ left: `${target.x}%`, top: `${target.y}%` }}><i />{region}</span>
-              <div className={`photo-tape ${tapePhotoClass} guide-segment-${guideStep}`} style={{ left: `${target.x}%`, top: `${target.y}%`, transform: `translate(-50%,-50%) rotate(${tapeRotation}deg) scale(${target.scale * tapeLength / 22})` }}><i /><i /><b>{tapeLength} cm</b></div>
+              <div className={`photo-tape ${tapePhotoClass} guide-segment-${guideStep}`} style={{ "--branch-angle": `${branchAngle}deg`, left: `${target.x}%`, top: `${target.y}%`, transform: `translate(-50%,-50%) rotate(${tapeRotation}deg) scale(${target.scale * tapeLength / 22})` } as CSSProperties}><i /><i /><b>{tapeLength} cm</b></div>
               <div className="body-scale-readout">身體比例 {target.scale.toFixed(2)}×</div>
               <div className="anchor-label">① 對準{region}定位點</div>
               <div className="stretch-label">{guideStep === 0 ? "錨點 0% 拉伸" : guideStep === 1 ? "中段保持 25%" : "末端 0% 拉伸"}</div>
