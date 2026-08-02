@@ -130,7 +130,8 @@ fieldset { border:0; padding:0; margin:0 0 26px; }legend{font-weight:700;font-si
 .photo-tape.combo-shape i{width:22px;height:142px;bottom:86px;transform-origin:center bottom}
 .photo-tape.combo-shape i:first-child{left:17px;transform:rotate(-22deg)}
 .photo-tape.combo-shape i:last-child{right:17px;transform:rotate(22deg)}
-.photo-tape.combo-shape:after{width:112px;height:22px;left:-17px;top:132px;border-radius:11px}
+.photo-tape.combo-shape:before,.photo-tape.combo-shape i{z-index:2}
+.photo-tape.combo-shape:after{width:112px;height:22px;left:-17px;top:105px;border-radius:11px;z-index:3;transform:none}
 
 /* Standard claw cut: one anchor base with four straight parallel tails. */
 .photo-tape.claw-shape:before{width:70px;height:78px;left:4px;bottom:0}
