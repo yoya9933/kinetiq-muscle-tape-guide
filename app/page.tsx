@@ -289,13 +289,19 @@ export default function Home() {
                 <section className="application-choice">
                   <div className="choice-heading"><div><span>下一步</span><h2>選擇自行貼或是機台貼</h2></div><small>方案與檔案號碼會保留於本次紀錄</small></div>
                   <div className="mode-grid">
-                    <button type="button" className={`mode-card ${applicationMode === "self" ? "selected" : ""}`} onClick={() => { setApplicationMode("self"); setStep(5); window.scrollTo({ top: 0, behavior: "smooth" }); }}>
-                      <span className="mode-icon">自</span><div><b>自行貼</b><small>透過手機完成剪裁與個人化肌貼導引</small></div><i>進入 Step 6 →</i>
+                    <button type="button" className={`mode-card ${applicationMode === "self" ? "selected" : ""}`} onClick={() => setApplicationMode("self")}>
+                      <span className="mode-icon">自</span><div><b>自行貼</b><small>透過手機完成剪裁與個人化肌貼導引</small></div><i>{applicationMode === "self" ? "✓ 已選擇" : "選擇此方式"}</i>
                     </button>
                     <button type="button" className={`mode-card ${applicationMode === "machine" ? "selected" : ""}`} onClick={chooseMachine}>
                       <span className="mode-icon">機</span><div><b>機台貼</b><small>取得檔案號碼，前往智慧肌貼機台讀取方案</small></div><i>查看機台位置 →</i>
                     </button>
                   </div>
+                  {applicationMode === "self" && (
+                    <div className="self-confirm">
+                      <div><span>已選擇</span><b>自行貼附</b><small>下一步將確認肌貼長度、剪裁形狀與貼附位置。</small></div>
+                      <button type="button" onClick={() => { setStep(5); window.scrollTo({ top: 0, behavior: "smooth" }); }}>確認並進入 Step 6 <span>→</span></button>
+                    </div>
+                  )}
                   {applicationMode === "machine" && (
                     <div className="machine-panel">
                       <div className="machine-ticket"><span>機台讀取檔案號碼</span><b>{machineFileNo}</b><small>請在智慧肌貼機台輸入此號碼</small></div>
