@@ -33,6 +33,7 @@ const answers = {
 export default function Home() {
   const [started, setStarted] = useState(false);
   const [landingExiting, setLandingExiting] = useState(false);
+  const [appEntering, setAppEntering] = useState(false);
   const [showExperienceForm, setShowExperienceForm] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [experienceProfile, setExperienceProfile] = useState({ name: "", email: "" });
@@ -163,10 +164,12 @@ export default function Home() {
     if (landingExiting) return;
     setLandingExiting(true);
     window.setTimeout(() => {
+      setAppEntering(true);
       setStarted(true);
       setLandingExiting(false);
       window.scrollTo({ top: 0 });
-    }, 720);
+      window.setTimeout(() => setAppEntering(false), 760);
+    }, 620);
   }
 
   if (!started) {
@@ -206,7 +209,8 @@ export default function Home() {
   }
 
   return (
-    <main>
+    <main className={appEntering ? "app-entering" : ""}>
+      <div className="app-entry-curtain" aria-hidden="true"><span>K</span><i /></div>
       <header className="topbar">
         <button className="brand" onClick={() => { setStep(0); setStarted(false); }} aria-label="回到首頁">
           <span className="brand-mark">K</span>
