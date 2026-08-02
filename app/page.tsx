@@ -53,6 +53,8 @@ export default function Home() {
   const [recordSaved, setRecordSaved] = useState(false);
   const [applicationMode, setApplicationMode] = useState<"" | "self" | "machine">("");
   const [machineFileNo, setMachineFileNo] = useState("");
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [transitionDirection, setTransitionDirection] = useState<"forward" | "back">("forward");
   const simulationRef = useRef<HTMLDivElement>(null);
   const isGuest = demoUser?.id === "GUEST";
   const availableSteps = isGuest ? steps.slice(0, 7) : steps;
@@ -91,14 +93,24 @@ export default function Home() {
   const bmi = Number(profile.height) > 0 ? Number(profile.weight) / ((Number(profile.height) / 100) ** 2) : 0;
   const bmiLabel = bmi < 18.5 ? "體重過輕" : bmi < 24 ? "健康範圍" : bmi < 27 ? "體重偏高" : "肥胖範圍";
 
+  function goToStep(target: number) {
+    const nextStep = Math.max(0, Math.min(target, availableSteps.length - 1));
+    if (nextStep === step || isTransitioning) return;
+    setTransitionDirection(nextStep > step ? "forward" : "back");
+    setIsTransitioning(true);
+    window.setTimeout(() => {
+      setStep(nextStep);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      window.setTimeout(() => setIsTransitioning(false), 360);
+    }, 240);
+  }
+
   function next() {
-    setStep((current) => Math.min(current + 1, availableSteps.length - 1));
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    goToStep(step + 1);
   }
 
   function back() {
-    setStep((current) => Math.max(current - 1, 0));
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    goToStep(step - 1);
   }
 
   function moveSimulatedTape(clientX: number, clientY: number) {
@@ -217,7 +229,8 @@ export default function Home() {
         </div>
       )}
 
-      <div className="app-shell">
+      <div className={`app-shell transition-${transitionDirection} ${isTransitioning ? "is-transitioning" : ""}`}>
+        <div className="step-change-overlay" aria-hidden="true"><i /><span>K</span><b>正在準備下一步</b></div>
         <aside className="sidebar" aria-label="操作進度">
           <p className="eyebrow">你的導引流程</p>
           <div className="progress-list">
@@ -225,7 +238,7 @@ export default function Home() {
               <button
                 key={item.short}
                 className={`progress-item ${index === step ? "active" : ""} ${index < step ? "done" : ""}`}
-                onClick={() => index <= step && setStep(index)}
+                onClick={() => index <= step && goToStep(index)}
                 disabled={index > step}
               >
                 <span className="step-number">{index < step ? "✓" : index + 1}</span>
@@ -357,7 +370,7 @@ export default function Home() {
                   {applicationMode === "self" && (
                     <div className="self-confirm">
                       <div><span>已選擇</span><b>自行貼附</b><small>下一步將確認肌貼長度、剪裁形狀與貼附位置。</small></div>
-                      <button type="button" onClick={() => { setStep(5); window.scrollTo({ top: 0, behavior: "smooth" }); }}>確認並進入 Step 6 <span>→</span></button>
+                      <button type="button" onClick={() => goToStep(5)}>確認並進入 Step 6 <span>→</span></button>
                     </div>
                   )}
                   {applicationMode === "machine" && (
