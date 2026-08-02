@@ -227,7 +227,7 @@ export default function Home() {
 
           <div className="stage">
             {step === 0 && (
-              <div className="two-column">
+              <div className="step-one-form-wrap">
                 <div className="form-card">
                   <label>生理性別
                     <div className="segmented">
@@ -252,7 +252,6 @@ export default function Home() {
                     </div>
                   </div>
                 </div>
-                <ModelPanel profile={profile} region={region} />
               </div>
             )}
 

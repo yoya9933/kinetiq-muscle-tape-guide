@@ -31,6 +31,7 @@ button { color:inherit; }
 .content-head { max-width:760px; }.content-head h1 { margin:0; font-size:clamp(30px,3.2vw,47px); line-height:1.12; letter-spacing:-.045em; }.content-head>p:last-child { color:var(--muted); margin:12px 0 0; font-size:14px; }
 .stage { margin-top:30px; min-height:480px; }
 .two-column { display:grid; grid-template-columns:minmax(380px,1fr) minmax(330px,.85fr); gap:28px; align-items:stretch; }
+.step-one-form-wrap{width:100%;max-width:720px;margin:0 auto}
 .form-card,.question-card,.instruction-panel,.check-panel,.ar-guide { background:#fff; border:1px solid var(--line); border-radius:20px; padding:26px; box-shadow:0 18px 40px rgba(32,72,62,.05); }
 .form-card>label { display:block; font-weight:700; font-size:13px; margin-bottom:22px; }
 .segmented { display:grid; grid-template-columns:1fr 1fr; gap:6px; padding:5px; margin-top:9px; background:#f0f4f1; border-radius:11px; }
