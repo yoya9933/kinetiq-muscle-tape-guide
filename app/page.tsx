@@ -32,6 +32,7 @@ const answers = {
 
 export default function Home() {
   const [started, setStarted] = useState(false);
+  const [landingExiting, setLandingExiting] = useState(false);
   const [showExperienceForm, setShowExperienceForm] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [experienceProfile, setExperienceProfile] = useState({ name: "", email: "" });
@@ -155,13 +156,23 @@ export default function Home() {
     localStorage.setItem("kinetiq-demo-profile", JSON.stringify(demo));
     setDemoUser({ name: demo.name, id: demo.id });
     setShowExperienceForm(false);
-    setStarted(true);
+    startGuide();
+  }
+
+  function startGuide() {
+    if (landingExiting) return;
+    setLandingExiting(true);
+    window.setTimeout(() => {
+      setStarted(true);
+      setLandingExiting(false);
+      window.scrollTo({ top: 0 });
+    }, 720);
   }
 
   if (!started) {
     return (
       <>
-        <main className="landing-page">
+        <main className={`landing-page ${landingExiting ? "landing-exiting" : ""}`}>
           <img src="/kinetiq-home.png" alt="KinetiQ 個人化智慧肌貼導引：身體模型、症狀分析、姿勢矯正、肌貼方案、模擬預覽與 AR 導引" />
           <div className="landing-shade" />
           <div className="landing-top">
@@ -172,10 +183,11 @@ export default function Home() {
             <p>從不適關節與症狀開始，取得個人化肌貼參數與逐步貼附指引。</p>
             <div className="landing-entry-actions">
               <button className="experience-button" onClick={() => setShowExperienceForm(true)}>建立體驗檔案 <span>→</span></button>
-              <button className="guest-button" onClick={() => { setDemoUser({ name: "訪客", id: "GUEST" }); setStarted(true); }}>直接以訪客開始</button>
+              <button className="guest-button" onClick={() => { setDemoUser({ name: "訪客", id: "GUEST" }); startGuide(); }}>直接以訪客開始</button>
             </div>
             <small>約 8 分鐘完成 · 體驗資料僅保存在此裝置 · 本服務不能取代醫療診斷</small>
           </div>
+          <div className="landing-transition" aria-hidden="true"><span>K</span><i /><b>啟動個人化導引</b></div>
         </main>
         {showExperienceForm && (
           <div className="experience-modal" role="dialog" aria-modal="true" aria-labelledby="experience-title">
