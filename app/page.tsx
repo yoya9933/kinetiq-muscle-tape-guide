@@ -362,12 +362,7 @@ export default function Home() {
             )}
 
             {step === 2 && (
-              <div className="two-column step-three-layout">
-                <div className="question-card">
-                  <div className="summary-chip"><span>目前選擇</span><b>{region || "尚未選擇關節"}</b><small>{selectedRegion?.muscles || `運動項目：${sport}`}</small></div>
-                  <ChoiceQuestion number="01" title="不適主要在哪個方向？" choices={answers.direction} value={symptom.direction} onChange={(value) => setSymptom({ ...symptom, direction: value })} />
-                  <div className="info-strip">請點擊右側人體模型，選擇需要肌貼支撐的關節位置。</div>
-                </div>
+              <div className="step-three-layout model-only">
                 <ModelPanel profile={profile} region={region} highlight onSelect={setRegion} />
               </div>
             )}
