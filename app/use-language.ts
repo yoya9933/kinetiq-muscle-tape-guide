@@ -37,9 +37,23 @@ export function usePageLanguage(language: "zh" | "en") {
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
     let node: Node | null;
     while ((node = walker.nextNode())) {
-      if (!originals.current.has(node)) originals.current.set(node, node.nodeValue ?? "");
-      const original = originals.current.get(node) ?? "";
-      node.nodeValue = language === "en" ? translateText(original) : original;
+      const current = node.nodeValue ?? "";
+      const saved = originals.current.get(node);
+      if (language === "zh") {
+        if (saved !== undefined) node.nodeValue = saved;
+        continue;
+      }
+      let original = saved ?? current;
+      let translated = translateText(original);
+      if (saved !== undefined && current !== translated && current !== original) {
+        original = current;
+        originals.current.set(node, original);
+        translated = translateText(original);
+      }
+      if (translated !== original) {
+        if (saved === undefined) originals.current.set(node, original);
+        node.nodeValue = translated;
+      }
     }
     root.querySelectorAll<HTMLElement>("[aria-label],[title],[placeholder]").forEach((element) => {
       ["aria-label","title","placeholder"].forEach((attribute) => {
