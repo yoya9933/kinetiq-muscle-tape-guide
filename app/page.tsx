@@ -195,9 +195,9 @@ export default function Home() {
               <button className="experience-button" onClick={() => setShowExperienceForm(true)}>建立體驗檔案 <span>→</span></button>
               <button className="guest-button" onClick={() => { setDemoUser({ name: "訪客", id: "GUEST" }); startGuide(); }}>直接以訪客開始</button>
             </div>
-            <small>約 8 分鐘完成 · 體驗資料僅保存在此裝置 · 本服務不能取代醫療診斷</small>
+            <small>約 8 分鐘完成 · 體驗資料僅保存在此裝置 · 本服務為操作輔助，不能取代醫療診斷</small>
           </div>
-          <div className="landing-transition" aria-hidden="true"><span>K</span><i /><b>啟動個人化導引</b></div>
+          <div className="landing-transition" aria-hidden="true"><span>K</span><i /><b>開始個人化導引</b></div>
         </main>
         {showExperienceForm && (
           <div className="experience-modal" role="dialog" aria-modal="true" aria-labelledby="experience-title">
@@ -312,12 +312,7 @@ export default function Home() {
                       {["纖細", "標準", "健壯"].map((value) => <button key={value} className={profile.build === value ? "selected" : ""} onClick={() => setProfile({ ...profile, build: value })}><i className={`body-shape ${value}`} />{value}</button>)}
                     </div>
                   </label>
-                  <div className="step-inline-question">
-                    <p><span>01</span>這次因為什麼原因而不適？</p>
-                    <div className="choice-row">
-                      {answers.trigger.map((choice) => <button type="button" key={choice} className={symptom.trigger === choice ? "selected" : ""} onClick={() => setSymptom({ ...symptom, trigger: choice })}>{choice}<i>✓</i></button>)}
-                    </div>
-                  </div>
+                  {/* 已移除：'這次因為什麼原因而不適' 問題（依需求精簡步驟） */}
                 </div>
               </div>
             )}
