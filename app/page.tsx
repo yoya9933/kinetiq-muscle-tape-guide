@@ -64,6 +64,32 @@ export default function Home() {
   const simulationRef = useRef<HTMLDivElement>(null);
   usePageLanguage(language);
   useInterfaceEffects();
+  useEffect(() => {
+    // Fallback: keep region in sync when clicks happen on production DOM
+    // (helps if hydration misses binding to React's setter)
+    const panel = document.querySelector<HTMLElement>(".model-panel");
+    if (!panel) return;
+    function onClick(event: MouseEvent) {
+      const btn = (event.target as Element)?.closest<HTMLButtonElement>(".model-panel .node");
+      if (!btn) return;
+      const name = btn.querySelector('span')?.textContent ?? "";
+      // update React state setter if available
+      try {
+        // call the setter indirectly by dispatching a CustomEvent React can listen to
+        // but easiest is to set a data attribute that React can read on next render
+        // Here we directly set region via window (fallback)
+        (window as any).__KINETIQ_FALLBACK_REGION__ = name;
+      } catch {}
+      // reflect immediately in DOM for better UX
+      const selected = document.querySelector('.selected-joint b');
+      if (selected) selected.textContent = name || '尚未選擇';
+      // mark active class
+      document.querySelectorAll('.model-panel .node').forEach((n) => n.classList.remove('active'));
+      btn.classList.add('active');
+    }
+    panel.addEventListener('click', onClick);
+    return () => panel.removeEventListener('click', onClick);
+  }, []);
   useEffect(() => { const saved = localStorage.getItem("kinetiq-language"); if (saved === "en") setLanguage("en"); }, []);
   const isGuest = demoUser?.id === "GUEST";
   const availableSteps = isGuest ? steps.slice(0, 7) : steps;
