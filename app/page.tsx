@@ -47,7 +47,7 @@ export default function Home() {
   const [appEntering, setAppEntering] = useState(false);
   const [showExperienceForm, setShowExperienceForm] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
-  const [darkMode, setDarkMode] = useState(true);
+  const [darkMode, setDarkMode] = useState(false);
   const [language, setLanguage] = useState<"zh" | "en">("zh");
   const [experienceProfile, setExperienceProfile] = useState({ name: "", email: "" });
   const [demoUser, setDemoUser] = useState<{ name: string; id: string } | null>(null);
@@ -101,8 +101,7 @@ export default function Home() {
     return () => panel.removeEventListener('click', onClick);
   }, []);
   useEffect(() => { const saved = localStorage.getItem("kinetiq-language"); if (saved === "en") setLanguage("en"); }, []);
-  const isGuest = demoUser?.id === "GUEST";
-  const availableSteps = isGuest ? steps.slice(0, 7) : steps;
+  const availableSteps = steps;
 
   const selectedRegion = useMemo(() => joints.find((item) => item.name === region), [region]);
   const isArm = ["肩", "肘", "腕"].some((joint) => region.includes(joint));
@@ -229,7 +228,6 @@ export default function Home() {
             <p>從不適關節與症狀開始，取得個人化肌貼參數與逐步貼附指引。</p>
             <div className="landing-entry-actions">
               <button className="experience-button" onClick={() => setShowExperienceForm(true)}>建立體驗檔案 <span>→</span></button>
-              <button className="guest-button" onClick={() => { setDemoUser({ name: "訪客", id: "GUEST" }); startGuide(); }}>直接以訪客開始</button>
             </div>
             <small>約 8 分鐘完成 · 體驗資料僅保存在此裝置 · 本服務為操作輔助，不能取代醫療診斷</small>
           </div>
@@ -485,7 +483,7 @@ export default function Home() {
               <ARGuide region={region} tapePhotoClass={tapePhotoClass} tapeLength={tapeLength} tapeRotation={tapeRotation} branchAngle={branchAngle} guideStep={arGuideStep} setGuideStep={setArGuideStep} captured={arCaptured} setCaptured={setArCaptured} />
             )}
 
-            {!isGuest && step === 7 && (
+            {step === 7 && (
               <FollowUpAnalysis region={region} tapeType={tapeTypeTitle} followUp={followUp} setFollowUp={(value) => { setFollowUp(value); setRecordSaved(false); }} saved={recordSaved} />
             )}
           </div>
@@ -493,7 +491,7 @@ export default function Home() {
           <footer className="actions">
             <button className="back-button" onClick={back} disabled={step === 0}>← 上一步</button>
             <span>{step === 7 ? "完成後將保存於此裝置" : `約需 ${Math.max(1, 8 - step)} 分鐘完成`}</span>
-            {step === 4 ? <span aria-hidden="true" /> : isGuest && step === 6 ? <button className="primary-button" onClick={() => { setStep(0); setPoseReady(false); setVerified(false); setStarted(false); }}>完成並返回首頁 <span>↻</span></button> : step < 7 ? <button className="primary-button" onClick={next} disabled={(step === 1 && !sport) || (step === 2 && !region) || (step === 3 && !poseReady)}>繼續 <span>→</span></button> : !recordSaved ? <button className="primary-button" onClick={saveFollowUp}>儲存追蹤紀錄 <span>✓</span></button> : <button className="primary-button" onClick={() => { setStep(0); setPoseReady(false); setVerified(false); setRecordSaved(false); setStarted(false); }}>完成並返回首頁 <span>↻</span></button>}
+            {step === 4 ? <span aria-hidden="true" /> : step < 7 ? <button className="primary-button" onClick={next} disabled={(step === 1 && !sport) || (step === 2 && !region) || (step === 3 && !poseReady)}>繼續 <span>→</span></button> : !recordSaved ? <button className="primary-button" onClick={saveFollowUp}>儲存追蹤紀錄 <span>✓</span></button> : <button className="primary-button" onClick={() => { setStep(0); setPoseReady(false); setVerified(false); setRecordSaved(false); setStarted(false); }}>完成並返回首頁 <span>↻</span></button>}
           </footer>
         </section>
       </div>

@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 
 const en: Record<string, string> = {
   "個人化智慧肌貼導引":"Personalized Kinesiology Tape Guide","訪客":"Guest","使用說明":"Help","切換亮色模式":"Switch to light mode","切換暗黑模式":"Switch to dark mode",
-  "從不適關節與症狀開始，取得個人化肌貼參數與逐步貼附指引。":"Start with the affected joint and symptoms to receive personalized tape parameters and step-by-step guidance.","建立體驗檔案":"Create demo profile","直接以訪客開始":"Continue as guest","約 8 分鐘完成 · 體驗資料僅保存在此裝置 · 本服務不能取代醫療診斷":"About 8 minutes · Demo data stays on this device · This service does not replace medical advice",
+  "從不適關節與症狀開始，取得個人化肌貼參數與逐步貼附指引。":"Start with the affected joint and symptoms to receive personalized tape parameters and step-by-step guidance.","建立體驗檔案":"Create demo profile","約 8 分鐘完成 · 體驗資料僅保存在此裝置 · 本服務不能取代醫療診斷":"About 8 minutes · Demo data stays on this device · This service does not replace medical advice",
   "你的導引流程":"Your guided flow","身體模型":"Body profile","不適關節":"Affected joint","運動項目":"Activity","不適位置":"Pain location","姿態校正":"Pose calibration","肌貼參數":"Tape plan","虛擬驗證":"Virtual preview","AR 導引":"AR guidance","貼後追蹤":"Follow-up",
   "建立身體比例並記錄不適原因":"Build body proportions and record the cause","選擇關節並描述目前的不適":"Choose a joint and describe your discomfort","選擇關節的前、後、內或外側":"Choose the front, back, inner, or outer side","依輪廓完成指定伸展動作":"Follow the outline to complete the stretch","計算種類、長度、方向與拉伸":"Calculate shape, length, direction, and tension","在實際操作前先確認方案":"Review the plan before application","逐段完成並檢查貼附結果":"Apply step by step and check the result","記錄效果並優化下次建議":"Track results and improve future recommendations",
   "影像隱私保護":"Image privacy","拍攝影像僅用於即時分析，不會公開分享。":"Images are used only for real-time analysis and are never shared publicly.",
