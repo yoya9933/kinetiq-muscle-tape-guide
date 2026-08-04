@@ -6,7 +6,7 @@ import { useInterfaceEffects } from "./use-interface-effects";
 
 const steps = [
   { short: "身體模型", title: "建立個人化人體模型", hint: "建立身體比例並記錄不適原因" },
-  { short: "不適關節", title: "選擇不適關節與感受", hint: "選擇關節並描述目前的不適" },
+  { short: "運動項目", title: "選擇要進行的運動", hint: "依運動型態調整肌貼支撐建議" },
   { short: "不適位置", title: "確認不適位置", hint: "選擇關節的前、後、內或外側" },
   { short: "姿態校正", title: "準備姿態拍攝", hint: "依輪廓完成指定伸展動作" },
   { short: "肌貼參數", title: "產生個人化肌貼方案", hint: "計算種類、長度、方向與拉伸" },
@@ -32,6 +32,15 @@ const answers = {
   trigger: ["扭傷", "拉傷", "撞擊", "過度使用"],
 };
 
+const sports = [
+  { name: "健走", icon: "🚶", hint: "日常步行與長距離健走" },
+  { name: "跑步", icon: "🏃", hint: "慢跑、路跑與間歇訓練" },
+  { name: "深蹲", icon: "🏋", hint: "下肢肌力與蹲舉訓練" },
+  { name: "啞鈴", icon: "💪", hint: "上肢阻力與重量訓練" },
+  { name: "騎腳踏車", icon: "🚴", hint: "自行車與室內飛輪" },
+  { name: "羽球／網球", icon: "🏸", hint: "揮拍、急停與方向變換" },
+];
+
 export default function Home() {
   const [started, setStarted] = useState(false);
   const [landingExiting, setLandingExiting] = useState(false);
@@ -45,6 +54,7 @@ export default function Home() {
   const [step, setStep] = useState(0);
   const [profile, setProfile] = useState({ gender: "女性", age: "28", height: "165", weight: "60", build: "標準" });
   const [region, setRegion] = useState("");
+  const [sport, setSport] = useState("");
   const [symptom, setSymptom] = useState({ direction: "後側", feeling: "緊繃", trigger: "扭傷" });
   const [poseReady, setPoseReady] = useState(false);
   const [verified, setVerified] = useState(false);
@@ -344,25 +354,23 @@ export default function Home() {
             )}
 
             {step === 1 && (
-              <div className="step-two-layout">
-                <ModelPanel profile={profile} region={region} highlight onSelect={setRegion} />
-                <div className="step-inline-question joint-feeling">
-                  <p><span>01</span>你感受到哪種不適？</p>
-                  <div className="choice-row">
-                    {answers.feeling.map((choice) => <button type="button" key={choice} className={symptom.feeling === choice ? "selected" : ""} onClick={() => setSymptom({ ...symptom, feeling: choice })}>{choice}<i>✓</i></button>)}
-                  </div>
+              <div className="sport-selection">
+                <div className="sport-selection-head"><span>ACTIVITY PROFILE</span><h2>這次準備進行什麼運動？</h2><p>選擇最接近的運動，系統會在後續方案中調整支撐方向與穩定需求。</p></div>
+                <div className="sport-grid">
+                  {sports.map((item) => <button type="button" key={item.name} className={`sport-card ${sport === item.name ? "selected" : ""}`} onClick={() => setSport(item.name)}><i>{item.icon}</i><span><b>{item.name}</b><small>{item.hint}</small></span><em>{sport === item.name ? "✓" : "→"}</em></button>)}
                 </div>
+                <div className="sport-summary"><span>目前選擇</span><b>{sport || "尚未選擇運動"}</b><small>{sport ? "下一步將選擇需要支撐的關節位置" : "請先選擇一項運動"}</small></div>
               </div>
             )}
 
             {step === 2 && (
               <div className="two-column step-three-layout">
                 <div className="question-card">
-                  <div className="summary-chip"><span>目前選擇</span><b>{region}</b><small>{selectedRegion?.muscles}</small></div>
+                  <div className="summary-chip"><span>目前選擇</span><b>{region || "尚未選擇關節"}</b><small>{selectedRegion?.muscles || `運動項目：${sport}`}</small></div>
                   <ChoiceQuestion number="01" title="不適主要在哪個方向？" choices={answers.direction} value={symptom.direction} onChange={(value) => setSymptom({ ...symptom, direction: value })} />
-                  <div className="info-strip">右側人體模型會顯示你在上一步選擇的關節位置。</div>
+                  <div className="info-strip">請點擊右側人體模型，選擇需要肌貼支撐的關節位置。</div>
                 </div>
-                <ModelPanel profile={profile} region={region} highlight />
+                <ModelPanel profile={profile} region={region} highlight onSelect={setRegion} />
               </div>
             )}
 
@@ -402,7 +410,7 @@ export default function Home() {
                   <div><span>貼附方向</span><b>{recommendation.direction}</b><em>依 Step 2、3 的選擇產生</em></div>
                   <div><span>起始位置</span><b>{recommendation.start}</b><em>固定端保留 3 cm 無拉力錨點</em></div>
                 </div>
-                <div className="reason-card"><b>方案依據</b><p>{profile.height} cm · {profile.build}體型 · {region}{symptom.direction} · {symptom.feeling} · {symptom.trigger}</p><p>可能相關肌群：<strong>{targetMuscle}</strong></p></div>
+                <div className="reason-card"><b>方案依據</b><p>{profile.height} cm · {profile.build}體型 · {sport} · {region}{symptom.direction} · {symptom.feeling} · {symptom.trigger}</p><p>可能相關肌群：<strong>{targetMuscle}</strong></p></div>
                 <section className="application-choice">
                   <div className="choice-heading"><div><span>下一步</span><h2>選擇自行貼或是機台貼</h2></div><small>方案與檔案號碼會保留於本次紀錄</small></div>
                   <div className="mode-grid">
@@ -485,7 +493,7 @@ export default function Home() {
           <footer className="actions">
             <button className="back-button" onClick={back} disabled={step === 0}>← 上一步</button>
             <span>{step === 7 ? "完成後將保存於此裝置" : `約需 ${Math.max(1, 8 - step)} 分鐘完成`}</span>
-            {step === 4 ? <span aria-hidden="true" /> : isGuest && step === 6 ? <button className="primary-button" onClick={() => { setStep(0); setPoseReady(false); setVerified(false); setStarted(false); }}>完成並返回首頁 <span>↻</span></button> : step < 7 ? <button className="primary-button" onClick={next} disabled={(step === 1 && !region) || (step === 3 && !poseReady)}>繼續 <span>→</span></button> : !recordSaved ? <button className="primary-button" onClick={saveFollowUp}>儲存追蹤紀錄 <span>✓</span></button> : <button className="primary-button" onClick={() => { setStep(0); setPoseReady(false); setVerified(false); setRecordSaved(false); setStarted(false); }}>完成並返回首頁 <span>↻</span></button>}
+            {step === 4 ? <span aria-hidden="true" /> : isGuest && step === 6 ? <button className="primary-button" onClick={() => { setStep(0); setPoseReady(false); setVerified(false); setStarted(false); }}>完成並返回首頁 <span>↻</span></button> : step < 7 ? <button className="primary-button" onClick={next} disabled={(step === 1 && !sport) || (step === 2 && !region) || (step === 3 && !poseReady)}>繼續 <span>→</span></button> : !recordSaved ? <button className="primary-button" onClick={saveFollowUp}>儲存追蹤紀錄 <span>✓</span></button> : <button className="primary-button" onClick={() => { setStep(0); setPoseReady(false); setVerified(false); setRecordSaved(false); setStarted(false); }}>完成並返回首頁 <span>↻</span></button>}
           </footer>
         </section>
       </div>
